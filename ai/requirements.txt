@@ -1,0 +1,4 @@
+fastapi==0.117.1
+minio==7.2.20
+python-multipart==0.0.24
+uvicorn==0.35.0

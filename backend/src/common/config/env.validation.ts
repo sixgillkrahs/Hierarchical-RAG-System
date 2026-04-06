@@ -66,6 +66,16 @@ export function validateEnvironment(config: RawEnvironment): RawEnvironment {
     5,
     'RAG_DEFAULT_TOP_K',
   );
+  const pythonApiTimeoutMs = parseNumber(
+    config.PYTHON_API_TIMEOUT_MS,
+    10_000,
+    'PYTHON_API_TIMEOUT_MS',
+  );
+  const storageCacheTtlMs = parseNumber(
+    config.STORAGE_CACHE_TTL_MS,
+    30_000,
+    'STORAGE_CACHE_TTL_MS',
+  );
 
   if (port <= 0) {
     throw new Error('PORT must be greater than 0.');
@@ -81,6 +91,14 @@ export function validateEnvironment(config: RawEnvironment): RawEnvironment {
 
   if (ragDefaultTopK <= 0) {
     throw new Error('RAG_DEFAULT_TOP_K must be greater than 0.');
+  }
+
+  if (pythonApiTimeoutMs <= 0) {
+    throw new Error('PYTHON_API_TIMEOUT_MS must be greater than 0.');
+  }
+
+  if (storageCacheTtlMs < 0) {
+    throw new Error('STORAGE_CACHE_TTL_MS must be greater than or equal to 0.');
   }
 
   const jwtSecret = parseString(config.JWT_SECRET, 'change-this-in-development');
@@ -120,6 +138,9 @@ export function validateEnvironment(config: RawEnvironment): RawEnvironment {
       config.ADMIN_DISPLAY_NAME,
       'System Administrator',
     ),
+    PYTHON_API_BASE_URL: parseString(config.PYTHON_API_BASE_URL, 'http://127.0.0.1:8000'),
+    PYTHON_API_TIMEOUT_MS: pythonApiTimeoutMs,
+    STORAGE_CACHE_TTL_MS: storageCacheTtlMs,
     RAG_DEFAULT_TOP_K: ragDefaultTopK,
     VECTOR_STORE_PROVIDER: parseString(config.VECTOR_STORE_PROVIDER, 'memory'),
     EMBEDDING_MODEL: parseString(

@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { validateEnvironment } from './common/config/env.validation';
 import { DatabaseModule } from './database/database.module';
+import { FoldersModule } from './folders/folders.module';
 import { HealthModule } from './health/health.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { RagModule } from './rag/rag.module';
@@ -22,6 +23,7 @@ import { UsersModule } from './users/users.module';
     DatabaseModule,
     AuthModule,
     HealthModule,
+    FoldersModule,
     UsersModule,
     RolesModule,
     PermissionsModule,
