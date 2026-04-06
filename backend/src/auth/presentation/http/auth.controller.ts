@@ -1,0 +1,107 @@
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Res,
+  UnauthorizedException,
+  Version,
+} from '@nestjs/common';
+import { QueryBus, CommandBus } from '@nestjs/cqrs';
+import { ConfigService } from '@nestjs/config';
+import { ApiCookieAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
+
+import { CurrentUser } from '../../../common/auth/decorators/current-user.decorator';
+import { Public } from '../../../common/auth/decorators/public.decorator';
+import type { AuthenticatedUser } from '../../../common/auth/interfaces/authenticated-user.interface';
+import { getAuthCookieName, getAuthCookieOptions } from '../../auth-cookie.util';
+import { LoginCommand } from '../../application/commands/login.command';
+import { GetCurrentUserQuery } from '../../application/queries/get-current-user.query';
+import type { AuthProfile } from '../../domain/auth-profile';
+import { LoginDto } from '../../dto/login.dto';
+
+type LoginExecutionResult = {
+  message: string;
+  success: boolean;
+  token: string;
+  user: AuthProfile;
+};
+
+@ApiTags('auth')
+@Controller('auth')
+export class AuthController {
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+    private readonly configService: ConfigService,
+  ) {}
+
+  @Public()
+  @Post('login')
+  @Version('1')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Authenticate with email and password' })
+  @ApiOkResponse({
+    description: 'Sets the HttpOnly auth cookie and returns the current user profile.',
+  })
+  async login(
+    @Body() payload: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.commandBus.execute<LoginCommand, LoginExecutionResult>(
+      new LoginCommand(payload.email, payload.password),
+    );
+
+    response.cookie(
+      getAuthCookieName(this.configService),
+      result.token,
+      getAuthCookieOptions(this.configService),
+    );
+
+    return {
+      success: result.success,
+      message: result.message,
+      user: result.user,
+    };
+  }
+
+  @Public()
+  @Post('logout')
+  @Version('1')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Clear the HttpOnly auth cookie' })
+  @ApiOkResponse({
+    description: 'Logs the browser session out by clearing the auth cookie.',
+  })
+  logout(@Res({ passthrough: true }) response: Response) {
+    const { maxAge, ...cookieOptions } = getAuthCookieOptions(this.configService);
+    void maxAge;
+
+    response.clearCookie(getAuthCookieName(this.configService), cookieOptions);
+
+    return {
+      success: true,
+      message: 'Logout successful.',
+    };
+  }
+
+  @Get('me')
+  @Version('1')
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Return the authenticated user profile' })
+  @ApiOkResponse({
+    description: 'Current user profile derived from the access token.',
+  })
+  me(@CurrentUser() user: AuthenticatedUser | undefined) {
+    if (!user) {
+      throw new UnauthorizedException('Authentication required.');
+    }
+
+    return this.queryBus.execute<GetCurrentUserQuery, AuthProfile>(
+      new GetCurrentUserQuery(user.userId),
+    );
+  }
+}

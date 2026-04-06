@@ -9,68 +9,212 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as MainRouteImport } from './routes/_main'
+import { Route as MainIndexRouteImport } from './routes/_main/index'
+import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
+import { Route as MainUsersRouteImport } from './routes/_main/users'
+import { Route as MainRolesRouteImport } from './routes/_main/roles'
+import { Route as MainPermissionsRouteImport } from './routes/_main/permissions'
+import { Route as MainAboutRouteImport } from './routes/_main/about'
 
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const MainRoute = MainRouteImport.update({
+  id: '/_main',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => MainRoute,
+} as any)
+const AuthSignInRoute = AuthSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => AuthRoute,
+} as any)
+const MainUsersRoute = MainUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainRolesRoute = MainRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainPermissionsRoute = MainPermissionsRouteImport.update({
+  id: '/permissions',
+  path: '/permissions',
+  getParentRoute: () => MainRoute,
+} as any)
+const MainAboutRoute = MainAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => MainRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/': typeof MainIndexRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/about': typeof MainAboutRoute
+  '/permissions': typeof MainPermissionsRoute
+  '/roles': typeof MainRolesRoute
+  '/users': typeof MainUsersRoute
+  '/auth/sign-in': typeof AuthSignInRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/about': typeof MainAboutRoute
+  '/permissions': typeof MainPermissionsRoute
+  '/roles': typeof MainRolesRoute
+  '/users': typeof MainUsersRoute
+  '/auth/sign-in': typeof AuthSignInRoute
+  '/': typeof MainIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/_main': typeof MainRouteWithChildren
+  '/auth': typeof AuthRouteWithChildren
+  '/_main/about': typeof MainAboutRoute
+  '/_main/permissions': typeof MainPermissionsRoute
+  '/_main/roles': typeof MainRolesRoute
+  '/_main/users': typeof MainUsersRoute
+  '/auth/sign-in': typeof AuthSignInRoute
+  '/_main/': typeof MainIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/about'
+    | '/permissions'
+    | '/roles'
+    | '/users'
+    | '/auth/sign-in'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about'
-  id: '__root__' | '/' | '/about'
+  to:
+    | '/auth'
+    | '/about'
+    | '/permissions'
+    | '/roles'
+    | '/users'
+    | '/auth/sign-in'
+    | '/'
+  id:
+    | '__root__'
+    | '/_main'
+    | '/auth'
+    | '/_main/about'
+    | '/_main/permissions'
+    | '/_main/roles'
+    | '/_main/users'
+    | '/auth/sign-in'
+    | '/_main/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
+  MainRoute: typeof MainRouteWithChildren
+  AuthRoute: typeof AuthRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_main': {
+      id: '/_main'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof MainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_main/': {
+      id: '/_main/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof MainIndexRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/auth/sign-in': {
+      id: '/auth/sign-in'
+      path: '/sign-in'
+      fullPath: '/auth/sign-in'
+      preLoaderRoute: typeof AuthSignInRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_main/users': {
+      id: '/_main/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof MainUsersRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/roles': {
+      id: '/_main/roles'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof MainRolesRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/permissions': {
+      id: '/_main/permissions'
+      path: '/permissions'
+      fullPath: '/permissions'
+      preLoaderRoute: typeof MainPermissionsRouteImport
+      parentRoute: typeof MainRoute
+    }
+    '/_main/about': {
+      id: '/_main/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof MainAboutRouteImport
+      parentRoute: typeof MainRoute
     }
   }
 }
 
+interface MainRouteChildren {
+  MainAboutRoute: typeof MainAboutRoute
+  MainPermissionsRoute: typeof MainPermissionsRoute
+  MainRolesRoute: typeof MainRolesRoute
+  MainUsersRoute: typeof MainUsersRoute
+  MainIndexRoute: typeof MainIndexRoute
+}
+
+const MainRouteChildren: MainRouteChildren = {
+  MainAboutRoute: MainAboutRoute,
+  MainPermissionsRoute: MainPermissionsRoute,
+  MainRolesRoute: MainRolesRoute,
+  MainUsersRoute: MainUsersRoute,
+  MainIndexRoute: MainIndexRoute,
+}
+
+const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
+
+interface AuthRouteChildren {
+  AuthSignInRoute: typeof AuthSignInRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthSignInRoute: AuthSignInRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
+  MainRoute: MainRouteWithChildren,
+  AuthRoute: AuthRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
