@@ -1,0 +1,34 @@
+﻿{
+    "latitude":  10.7769,
+    "description":  "Automated listing created from live landing-agent-admin flow on localhost.",
+    "direction":  "SOUTH_EAST",
+    "province":  "Ho Chi Minh",
+    "bathrooms":  2,
+    "furniture":  "FULL",
+    "bedrooms":  2,
+    "propertyType":  "APARTMENT",
+    "ward":  "Ben Nghe",
+    "priceUnit":  "BILLION",
+    "title":  "Can ho 2PN flow test 1774317226",
+    "address":  "12 Nguyen Hue, District 1",
+    "videoLink":  "",
+    "longitude":  106.7009,
+    "thumbnail":  "https://res.cloudinary.com/dr1akv5p4/image/upload/v1774317489/uploads/bhdwiuqyqg8x32kltcjy.png",
+    "virtualTourUrls":  [
+
+                        ],
+    "demandType":  "SALE",
+    "price":  "3.5",
+    "currency":  "VND",
+    "amenities":  [
+                      "ELEVATOR",
+                      "BALCONY",
+                      "SECURITY"
+                  ],
+    "projectName":  "Sunrise Flow Tower 1774317226",
+    "images":  [
+                   "https://res.cloudinary.com/dr1akv5p4/image/upload/v1774317489/uploads/bhdwiuqyqg8x32kltcjy.png"
+               ],
+    "area":  "75",
+    "legalStatus":  "PINK_BOOK"
+}

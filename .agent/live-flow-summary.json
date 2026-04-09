@@ -1,0 +1,17 @@
+﻿{
+    "agent":  {
+                  "registrationId":  "69c1eeaed166524e8a2cb00b",
+                  "userId":  "69c1efaeafc02880255454ef",
+                  "email":  "agent.flow.1774317226@example.com",
+                  "password":  "Agent@1774317226",
+                  "registrationLink":  "http://localhost:3000/verify-email/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWMxZWZhZWFmYzAyODgwMjU1NDU0ZWYiLCJlbWFpbCI6ImFnZW50LmZsb3cuMTc3NDMxNzIyNkBleGFtcGxlLmNvbSIsImZ1bGxOYW1lIjoiQWdlbnQgRmxvdyAxNzc0MzE3MjI2IiwiaWF0IjoxNzc0MzE3NDg2LCJleHAiOjE3NzUyMTc0ODZ9.vRbPjhMk0impPzCmNEq4WFbn4XhBNng-FLYtckGQO2Y"
+              },
+    "property":  {
+                     "id":  "69c1efb1afc0288025545509",
+                     "title":  "Can ho 2PN flow test 1774317226",
+                     "statusBeforeApprove":  "PENDING",
+                     "statusAfterApprove":  "PUBLISHED",
+                     "publicApiView":  "http://localhost:8000/api/properties/69c1efb1afc0288025545509/view",
+                     "publicPage":  "http://localhost:3000/properties/69c1efb1afc0288025545509"
+                 }
+}

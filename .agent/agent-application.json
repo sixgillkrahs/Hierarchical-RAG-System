@@ -1,0 +1,29 @@
+﻿{
+    "identityInfo":  {
+                         "fullName":  "Agent Flow 1774317226",
+                         "IDNumber":  "101774317226",
+                         "dateOfBirth":  "01/01/1995",
+                         "gender":  "Nam",
+                         "nationality":  "Viet Nam",
+                         "placeOfBirth":  "Ho Chi Minh City"
+                     },
+    "specialization":  [
+                           "APARTMENT",
+                           "LAND"
+                       ],
+    "certificateNumber":  "CCHN-1774317226",
+    "certificateImage":  [
+                             "https://res.cloudinary.com/dr1akv5p4/image/upload/v1774317230/uploads/uhn6bthxa73toap6s1lf.png"
+                         ],
+    "agreeToTerms":  true,
+    "workingArea":  [
+                        "Ho Chi Minh"
+                    ],
+    "taxCode":  "TAX1774317226",
+    "phoneNumber":  "0974317226",
+    "nameRegister":  "Agent Flow 1774317226",
+    "identityFront":  "https://res.cloudinary.com/dr1akv5p4/image/upload/v1774317230/uploads/uhn6bthxa73toap6s1lf.png",
+    "yearsOfExperience":  "3",
+    "identityBack":  "https://res.cloudinary.com/dr1akv5p4/image/upload/v1774317230/uploads/uhn6bthxa73toap6s1lf.png",
+    "email":  "agent.flow.1774317226@example.com"
+}

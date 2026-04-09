@@ -11,7 +11,7 @@ async function bootstrap(): Promise<void> {
   const configService = app.get(ConfigService);
 
   app.setGlobalPrefix('api');
-  app.use(cookieParser);
+  app.use(cookieParser());
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
