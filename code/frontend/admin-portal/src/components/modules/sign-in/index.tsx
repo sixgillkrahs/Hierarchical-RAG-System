@@ -1,9 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
 import { startTransition, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod/v3";
 import AuthService from "../../../shared/auth/AuthService";
+import {
+  AUTH_SESSION_QUERY_KEY,
+  setAuthSession,
+} from "../../../shared/auth/auth-session";
+import { queryClient } from "../../../shared/query/queryClient";
 import { Button } from "../../ui/button";
 import {
   Card,
@@ -26,12 +33,12 @@ import { Input } from "../../ui/input";
 const signInSchema = z.object({
   email: z
     .string()
-    .min(1, "Email là bắt buộc.")
-    .email("Email không đúng định dạng."),
+    .min(1, "Email is required.")
+    .email("Email format is invalid."),
   password: z
     .string()
-    .min(8, "Mật khẩu cần ít nhất 8 ký tự.")
-    .max(128, "Mật khẩu quá dài."),
+    .min(8, "Password must be at least 8 characters.")
+    .max(128, "Password is too long."),
 });
 
 type SignInFormValues = z.infer<typeof signInSchema>;
@@ -61,18 +68,11 @@ const getErrorMessage = (error: unknown) => {
     return error.message;
   }
 
-  return "Không thể đăng nhập. Kiểm tra lại thông tin hoặc cấu hình API.";
+  return "Unable to sign in. Check the credentials or API configuration.";
 };
-
-const trustPoints = [
-  "Form validation chạy trên React Hook Form + Zod, hiển thị lỗi ngay tại field.",
-  "Luồng submit đã nối với AuthService để bạn gắn backend thật mà không phải đổi UI.",
-  "Bố cục dùng shadcn-style components nên có thể tái sử dụng cho reset password và invite flow.",
-];
 
 function SignInPage() {
   const navigate = useNavigate();
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<SignInFormValues>({
@@ -82,169 +82,153 @@ function SignInPage() {
   });
 
   const handleSubmit = async (values: SignInFormValues) => {
-    setSubmitError(null);
-
     try {
-      await AuthService.signIn(values);
+      const response = await AuthService.signIn(values);
+      setAuthSession(queryClient, response.user);
+      await queryClient.invalidateQueries({
+        queryKey: AUTH_SESSION_QUERY_KEY,
+        refetchType: "none",
+      });
+      toast.success("Login successful", {
+        description: response.message,
+      });
       startTransition(() => {
         void navigate({ to: "/" });
       });
     } catch (error) {
-      setSubmitError(getErrorMessage(error));
+      toast.error("Login failed", {
+        description: getErrorMessage(error),
+      });
     }
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-transparent">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(176,123,55,0.18),transparent_30%),radial-gradient(circle_at_80%_10%,rgba(75,49,23,0.16),transparent_22%)]" />
-      <div className="mx-auto grid min-h-screen max-w-7xl items-center gap-10 px-6 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
-        <section className="hidden lg:flex lg:flex-col lg:justify-between">
-          <div className="space-y-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.36em] text-muted-foreground">
-              Admin Access
-            </p>
-            <div className="space-y-5">
-              <h1 className="max-w-xl text-6xl font-semibold tracking-tight text-balance">
-                Sign in to steer the retrieval stack with precision.
-              </h1>
-              <p className="max-w-xl text-lg leading-8 text-muted-foreground">
-                A focused entry point for operators who need clean access to
-                dataset health, indexing jobs, and permission-bound tooling.
-              </p>
-            </div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10 sm:px-6">
+      <div className="absolute inset-0 -z-20 bg-[linear-gradient(180deg,#f8f4ec_0%,#f2eadf_100%)]" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(178,133,71,0.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(67,88,102,0.12),transparent_24%)]" />
+      <div className="absolute top-16 left-1/2 -z-10 h-48 w-48 -translate-x-1/2 rounded-full bg-white/60 blur-3xl" />
+
+      <Card className="w-full max-w-md border-white/70 bg-[#fffaf4]/92 shadow-[0_36px_100px_-48px_rgba(66,46,23,0.48)]">
+        <CardHeader className="space-y-5 p-8 pb-0 text-center">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#dcc9ab] bg-white/85 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[#7f6133]">
+            <ShieldCheck className="size-3.5" />
+            Admin Portal
           </div>
 
-          <div className="rounded-[2rem] border border-border/60 bg-card/70 p-8 shadow-[0_30px_100px_-50px_rgba(72,48,22,0.6)] backdrop-blur">
-            <div className="grid gap-4">
-              {trustPoints.map((point) => (
-                <div
-                  key={point}
-                  className="rounded-3xl border border-border/60 bg-background/70 p-5"
-                >
-                  <p className="text-sm leading-7 text-foreground/88">
-                    {point}
-                  </p>
-                </div>
-              ))}
+          <div className="space-y-3">
+            <div className="mx-auto flex size-14 items-center justify-center rounded-[1.4rem] bg-[#f2e6d3] text-[#7f6133]">
+              <LockKeyhole className="size-6" />
             </div>
+            <CardTitle className="text-[2rem] tracking-[-0.04em] text-[#211a13]">
+              Sign in
+            </CardTitle>
+            <CardDescription className="text-[0.96rem] leading-7 text-[#726556]">
+              Use your administrative account to access the control panel.
+            </CardDescription>
           </div>
-        </section>
+        </CardHeader>
 
-        <section className="flex items-center justify-center">
-          <Card className="w-full max-w-xl">
-            <CardHeader className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="rounded-full border border-border/70 bg-background/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-                  Secure Sign In
-                </div>
-                <Link
-                  to="/"
-                  className="text-sm font-medium text-muted-foreground transition hover:text-foreground"
-                >
-                  Back to portal
-                </Link>
-              </div>
-              <div className="space-y-2">
-                <CardTitle>Welcome back</CardTitle>
-                <CardDescription>
-                  Đăng nhập bằng tài khoản quản trị để tiếp tục vào admin
-                  portal.
-                </CardDescription>
-              </div>
-            </CardHeader>
+        <CardContent className="space-y-6 p-8">
+          <Form {...form}>
+            <form
+              className="space-y-5"
+              onSubmit={form.handleSubmit(handleSubmit)}
+            >
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-[#251d16]">
+                      Email
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        autoComplete="email"
+                        className="h-12 rounded-2xl border-[#dac9af] bg-white px-4 text-sm text-[#221b14] placeholder:text-[#9a8a77] focus-visible:border-[#8f6c3a] focus-visible:ring-[#8f6c3a]/20"
+                        placeholder="admin@company.com"
+                        {...field}
+                        tabIndex={1}
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs leading-6 text-[#877764]">
+                      Account must already be granted portal access.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <CardContent className="space-y-6">
-              {submitError ? (
-                <div className="rounded-2xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
-                  {submitError}
-                </div>
-              ) : null}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between gap-4">
+                      <FormLabel className="text-sm font-semibold text-[#251d16]">
+                        Password
+                      </FormLabel>
+                      <a
+                        href="mailto:support@company.com"
+                        className="text-sm font-medium text-[#8f6c3a] transition hover:text-[#6f532c]"
+                      >
+                        Need help?
+                      </a>
+                    </div>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          autoComplete="current-password"
+                          className="h-12 rounded-2xl border-[#dac9af] bg-white px-4 pr-14 text-sm text-[#221b14] placeholder:text-[#9a8a77] focus-visible:border-[#8f6c3a] focus-visible:ring-[#8f6c3a]/20"
+                          placeholder="Enter your password"
+                          type={showPassword ? "text" : "password"}
+                          {...field}
+                          tabIndex={2}
+                        />
+                        <button
+                          type="button"
+                          className="absolute inset-y-0 right-2 my-auto inline-flex size-9 items-center justify-center rounded-full text-[#7d6a54] transition hover:bg-[#f4ecdf] hover:text-[#221b14]"
+                          onClick={() => setShowPassword((value) => !value)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                          <span className="sr-only">
+                            {showPassword ? "Hide password" : "Show password"}
+                          </span>
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <Form {...form}>
-                <form
-                  className="space-y-5"
-                  onSubmit={form.handleSubmit(handleSubmit)}
-                >
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            autoComplete="email"
-                            placeholder="admin@company.com"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Dùng email đã được cấp quyền vào hệ thống.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <Button
+                className="h-12 w-full rounded-2xl bg-[#231b14] text-sm font-semibold text-white shadow-[0_18px_40px_-20px_rgba(35,27,20,0.8)] transition hover:bg-[#3a2d22]"
+                size="lg"
+                type="submit"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting
+                  ? "Signing in..."
+                  : "Sign in to continue"}
+              </Button>
+            </form>
+          </Form>
 
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center justify-between">
-                          <FormLabel>Password</FormLabel>
-                          <a
-                            href="mailto:support@company.com"
-                            className="text-sm font-medium text-muted-foreground transition hover:text-foreground"
-                          >
-                            Forgot password?
-                          </a>
-                        </div>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              autoComplete="current-password"
-                              placeholder="Enter your password"
-                              type={showPassword ? "text" : "password"}
-                              {...field}
-                            />
-                            <button
-                              type="button"
-                              className="absolute inset-y-0 right-3 my-auto h-8 rounded-full px-3 text-xs font-semibold text-muted-foreground transition hover:bg-accent hover:text-foreground"
-                              onClick={() => setShowPassword((value) => !value)}
-                            >
-                              {showPassword ? "Hide" : "Show"}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="rounded-3xl border border-border/60 bg-background/70 px-4 py-3 text-sm text-muted-foreground">
-                    API target:{" "}
-                    <span className="font-medium text-foreground">
-                      {import.meta.env.VITE_BASEURL || "Missing VITE_BASEURL"}
-                    </span>
-                  </div>
-
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    type="submit"
-                    disabled={form.formState.isSubmitting}
-                  >
-                    {form.formState.isSubmitting
-                      ? "Signing in..."
-                      : "Sign in to admin"}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
+          <div className="text-center">
+            <Link
+              to="/"
+              className="inline-flex text-sm font-medium text-[#7b6b5b] transition hover:text-[#241c15]"
+            >
+              Back to portal
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

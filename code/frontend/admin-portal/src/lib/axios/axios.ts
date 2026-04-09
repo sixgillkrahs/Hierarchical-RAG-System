@@ -5,14 +5,18 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 
+type RetryableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+};
+
 let isRefreshing = false;
 let failedQueue: {
   resolve: (value?: unknown) => void;
-  reject: (reason?: any) => void;
+  reject: (reason?: unknown) => void;
 }[] = [];
 const SKIP_REFRESH_PATHS = ["/auth/login", "/auth/refresh-token"];
 
-const processQueue = (error: any) => {
+const processQueue = (error: unknown) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(true);
@@ -41,14 +45,14 @@ client.interceptors.request.use(
 client.interceptors.response.use(
   (res: AxiosResponse) => res,
   async (error: AxiosError) => {
-    const originalRequest: any = error.config;
+    const originalRequest = error.config as RetryableRequestConfig | undefined;
     const status = error.response?.status;
     const requestUrl = originalRequest?.url ?? "";
 
     if (SKIP_REFRESH_PATHS.some((path) => requestUrl.includes(path))) {
       return Promise.reject(error);
     }
-    if (status === 401 && !originalRequest._retry) {
+    if (status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
 
       if (isRefreshing) {

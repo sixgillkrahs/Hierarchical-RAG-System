@@ -1,19 +1,20 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class CreatePermissionDto {
-  @ApiProperty({
+export class UpdatePermissionDto {
+  @ApiPropertyOptional({
     example: 'permissions.manage',
-    description: 'Unique machine-readable permission code.',
+    description: 'Updated machine-readable permission code.',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  code!: string;
+  @IsNotEmpty()
+  code?: string;
 
   @ApiPropertyOptional({
-    example: 'Create and update permissions.',
+    example: 'Create, update, and delete permissions.',
     description:
-      'Human-readable permission description. Preferred over the deprecated name field.',
+      'Updated human-readable permission description. Preferred over the deprecated name field.',
   })
   @IsOptional()
   @IsString()
@@ -21,7 +22,7 @@ export class CreatePermissionDto {
   description?: string;
 
   @ApiPropertyOptional({
-    example: 'Create and update permissions.',
+    example: 'Create, update, and delete permissions.',
     deprecated: true,
     description: 'Deprecated alias for description kept for backward compatibility.',
   })

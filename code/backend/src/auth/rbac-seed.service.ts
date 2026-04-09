@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { In, Repository } from 'typeorm';
 
 import {
@@ -89,9 +89,9 @@ export class RbacSeedService implements OnApplicationBootstrap {
 
   private async seedAdminUser(): Promise<void> {
     const adminEmail =
-      this.configService.get<string>('ADMIN_EMAIL') ?? 'admin@company.com';
+      this.configService.get<string>('ADMIN_EMAIL') ?? 'admin@gmail.com';
     const adminPassword =
-      this.configService.get<string>('ADMIN_PASSWORD') ?? 'ChangeMe123!';
+      this.configService.get<string>('ADMIN_PASSWORD') ?? '123456aA@';
     const adminDisplayName =
       this.configService.get<string>('ADMIN_DISPLAY_NAME') ??
       'System Administrator';
@@ -129,11 +129,17 @@ export class RbacSeedService implements OnApplicationBootstrap {
       return;
     }
 
+    const passwordHash = await bcrypt.hash(adminPassword, 10);
     const roleIds = new Set(existingUser.roles.map((role) => role.id));
-    if (!roleIds.has(adminRole.id)) {
-      existingUser.roles = [...existingUser.roles, adminRole];
-      await this.userRepository.save(existingUser);
-    }
+    existingUser.displayName = adminDisplayName;
+    existingUser.email = adminEmail.toLowerCase();
+    existingUser.passwordHash = passwordHash;
+    existingUser.isActive = true;
+    existingUser.roles = roleIds.has(adminRole.id)
+      ? existingUser.roles
+      : [...existingUser.roles, adminRole];
+
+    await this.userRepository.save(existingUser);
+    this.logger.log(`Reconciled default admin user ${adminEmail.toLowerCase()}.`);
   }
 }
-

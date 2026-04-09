@@ -113,6 +113,113 @@ describe('Auth and RBAC (e2e)', () => {
       });
   });
 
+  it('rejects invalid login credentials', async () => {
+    await agent
+      .post('/api/v1/auth/login')
+      .send({
+        email: 'admin@company.com',
+        password: 'wrong-password',
+      })
+      .expect(401)
+      .expect(({ body }: { body: { message: string } }) => {
+        expect(body.message).toBe('Invalid email or password.');
+      });
+  });
+
+  it('supports permission CRUD for admins', async () => {
+    await agent.post('/api/v1/auth/login').send({
+      email: 'admin@company.com',
+      password: 'ChangeMe123!',
+    });
+
+    const createResponse = await agent
+      .post('/api/v1/permissions')
+      .send({
+        code: 'documents.approve',
+        description: 'Approve documents before publishing.',
+      })
+      .expect(200);
+
+    const createdPermission = createResponse.body.permission as {
+      code: string;
+      description: string;
+      id: string;
+    };
+
+    expect(createdPermission.code).toBe('documents.approve');
+    expect(createdPermission.description).toBe(
+      'Approve documents before publishing.',
+    );
+
+    await agent
+      .get(`/api/v1/permissions/${createdPermission.id}`)
+      .expect(200)
+      .expect(
+        ({
+          body,
+        }: {
+          body: { code: string; description: string; id: string };
+        }) => {
+          expect(body.id).toBe(createdPermission.id);
+          expect(body.code).toBe('documents.approve');
+        },
+      );
+
+    await agent
+      .patch(`/api/v1/permissions/${createdPermission.id}`)
+      .send({
+        description: 'Approve and publish documents.',
+      })
+      .expect(200)
+      .expect(
+        ({
+          body,
+        }: {
+          body: { permission: { description: string } };
+        }) => {
+          expect(body.permission.description).toBe(
+            'Approve and publish documents.',
+          );
+        },
+      );
+
+    await agent
+      .delete(`/api/v1/permissions/${createdPermission.id}`)
+      .expect(200)
+      .expect(
+        ({
+          body,
+        }: {
+          body: { permission: { id: string } };
+        }) => {
+          expect(body.permission.id).toBe(createdPermission.id);
+        },
+      );
+
+    await agent.get(`/api/v1/permissions/${createdPermission.id}`).expect(404);
+  });
+
+  it('rejects deleting permissions assigned to roles', async () => {
+    await agent.post('/api/v1/auth/login').send({
+      email: 'admin@company.com',
+      password: 'ChangeMe123!',
+    });
+
+    const listResponse = await agent.get('/api/v1/permissions').expect(200);
+    const existingPermission = (
+      listResponse.body as Array<{ code: string; id: string }>
+    ).find((permission) => permission.code === 'permissions.read');
+
+    expect(existingPermission).toBeDefined();
+
+    await agent
+      .delete(`/api/v1/permissions/${existingPermission?.id}`)
+      .expect(409)
+      .expect(({ body }: { body: { message: string } }) => {
+        expect(body.message).toContain('cannot be deleted');
+      });
+  });
+
   it('clears the auth cookie on logout', async () => {
     const logoutResponse = await agent.post('/api/v1/auth/logout').expect(200);
     const setCookie = logoutResponse.headers['set-cookie'] as string[] | undefined;

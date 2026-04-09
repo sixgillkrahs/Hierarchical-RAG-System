@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import {
   Activity,
   ArrowUpRight,
@@ -15,8 +15,21 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import { getAuthSession } from "../../shared/auth/auth-session";
+import { queryClient } from "../../shared/query/queryClient";
 
 export const Route = createFileRoute("/_main/")({
+  beforeLoad: async () => {
+    const session = await getAuthSession(queryClient, {
+      suppressErrors: true,
+    });
+
+    if (!session) {
+      throw redirect({
+        to: "/auth/sign-in",
+      });
+    }
+  },
   component: RouteComponent,
 });
 

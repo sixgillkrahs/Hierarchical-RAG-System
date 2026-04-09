@@ -42,14 +42,18 @@ The admin user is seeded automatically on application startup if it does not exi
 ## Authentication model
 
 - `POST /api/v1/auth/login` sets a `HttpOnly` cookie instead of returning a bearer token for the browser to store.
+- The login response returns the authenticated user profile with `id`, `email`, `roles`, and `permissions`.
 - `GET /api/v1/auth/me` and protected routes read the JWT from that cookie.
 - `POST /api/v1/auth/logout` clears the auth cookie.
 - Cross-origin requests require `withCredentials: true` on the frontend and `credentials: true` on backend CORS.
+
+This means the login flow is not just session-based. It is designed around a role-based access control model, where the authenticated session also carries the authorization context needed by the admin portal.
 
 ## RBAC model
 
 - A `user` can have multiple `roles`.
 - A `role` can have multiple `permissions`.
+- Login establishes both identity and authorization context for the current session.
 - Endpoint access is protected with `@RequirePermissions(...)`.
 - Public endpoints are explicitly marked with `@Public()`.
 

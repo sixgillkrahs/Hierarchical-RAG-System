@@ -132,8 +132,8 @@ export function validateEnvironment(config: RawEnvironment): RawEnvironment {
     AUTH_COOKIE_SAME_SITE: parseString(config.AUTH_COOKIE_SAME_SITE, 'lax'),
     AUTH_COOKIE_DOMAIN: parseString(config.AUTH_COOKIE_DOMAIN, ''),
     AUTH_COOKIE_MAX_AGE_MS: authCookieMaxAgeMs,
-    ADMIN_EMAIL: parseString(config.ADMIN_EMAIL, 'admin@company.com').toLowerCase(),
-    ADMIN_PASSWORD: parseString(config.ADMIN_PASSWORD, 'ChangeMe123!'),
+    ADMIN_EMAIL: parseString(config.ADMIN_EMAIL, 'admin@gmail.com').toLowerCase(),
+    ADMIN_PASSWORD: parseString(config.ADMIN_PASSWORD, '123456aA@'),
     ADMIN_DISPLAY_NAME: parseString(
       config.ADMIN_DISPLAY_NAME,
       'System Administrator',

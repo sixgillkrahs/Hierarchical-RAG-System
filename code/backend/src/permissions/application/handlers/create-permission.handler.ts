@@ -1,4 +1,4 @@
-import { ConflictException, Inject } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject } from '@nestjs/common';
 import { CommandHandler, type ICommandHandler } from '@nestjs/cqrs';
 
 import {
@@ -18,10 +18,23 @@ export class CreatePermissionHandler
   ) {}
 
   async execute(command: CreatePermissionCommand): Promise<PermissionSummary> {
+    const code = command.code.trim();
+    const description = command.description.trim();
+
+    if (!code) {
+      throw new BadRequestException('Permission code must not be empty.');
+    }
+
+    if (!description) {
+      throw new BadRequestException(
+        'Permission description must not be empty.',
+      );
+    }
+
     try {
       return await this.permissionRepository.create({
-        code: command.code.trim(),
-        description: command.description.trim(),
+        code,
+        description,
       });
     } catch (error) {
       const message =
@@ -35,4 +48,3 @@ export class CreatePermissionHandler
     }
   }
 }
-

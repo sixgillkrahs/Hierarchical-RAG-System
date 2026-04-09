@@ -1,12 +1,20 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   ArrowUpRight,
   KeyRound,
   LayoutDashboard,
+  LogOut,
   ShieldCheck,
   UserCog,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { startTransition, type ReactNode, useState } from "react";
+import { toast } from "sonner";
+import AuthService from "../../shared/auth/AuthService";
+import {
+  setAuthSession,
+  useAuthSession,
+} from "../../shared/auth/auth-session";
+import { queryClient } from "../../shared/query/queryClient";
 import { Button } from "../ui/button";
 import {
   Sidebar,
@@ -31,38 +39,67 @@ type MainLayoutProps = {
 };
 
 function MainLayout({ children }: MainLayoutProps) {
+  const navigate = useNavigate();
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
+  const { data: session } = useAuthSession();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const navigationItems = [
     {
       to: "/users",
-      label: "Quản lý người dùng",
+      label: "User management",
       icon: UserCog,
     },
     {
       to: "/roles",
-      label: "Quản lý vai trò",
+      label: "Role management",
       icon: ShieldCheck,
     },
     {
       to: "/permissions",
-      label: "Quản lý quyền",
+      label: "Permission management",
       icon: KeyRound,
     },
   ] as const;
 
   const sectionLabel =
     pathname === "/"
-      ? "Tổng quan truy cập"
+      ? "Access overview"
       : pathname.startsWith("/users")
-        ? "Quản lý người dùng"
+        ? "User management"
         : pathname.startsWith("/roles")
-          ? "Quản lý vai trò"
+          ? "Role management"
           : pathname.startsWith("/permissions")
-            ? "Quản lý quyền"
+            ? "Permission management"
             : "RBAC workspace";
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    let didLogout = false;
+
+    try {
+      const response = await AuthService.logout();
+      didLogout = true;
+      toast.success("Logout successful", {
+        description: response.message,
+      });
+    } catch (error) {
+      toast.error("Logout failed", {
+        description:
+          error instanceof Error ? error.message : "Unable to sign out.",
+      });
+    } finally {
+      setIsLoggingOut(false);
+      if (didLogout) {
+        setAuthSession(queryClient, null);
+        startTransition(() => {
+          void navigate({ to: "/auth/sign-in" });
+        });
+      }
+    }
+  };
 
   return (
     <SidebarProvider defaultOpen>
@@ -81,8 +118,7 @@ function MainLayout({ children }: MainLayoutProps) {
                   RBAC Control
                 </p>
                 <p className="mt-1 text-sm leading-6 text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
-                  Thiết kế và vận hành role-based access control cho toàn bộ
-                  admin portal.
+                  Role-based access management for the admin portal.
                 </p>
               </div>
               <LayoutDashboard className="mt-0.5 shrink-0 text-sidebar-primary" />
@@ -94,7 +130,7 @@ function MainLayout({ children }: MainLayoutProps) {
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Quản lý người dùng</SidebarGroupLabel>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {navigationItems.map((item) => {
@@ -126,16 +162,17 @@ function MainLayout({ children }: MainLayoutProps) {
         <SidebarFooter className="p-3 pt-0">
           <div className="rounded-3xl border border-dashed border-sidebar-border/80 bg-sidebar-accent/35 px-4 py-4 text-sm text-sidebar-foreground/80 group-data-[collapsible=icon]:hidden">
             <p className="font-medium text-sidebar-foreground">
-              3 thay đổi đang chờ phê duyệt
+              Role-based rollout
             </p>
             <p className="mt-2 leading-6">
-              Đồng bộ role bundle trước khi rollout policy mới cho production.
+              Align role bundles and permission ownership before publishing
+              policy changes.
             </p>
             <Link
               to="/permissions"
               className="mt-3 inline-flex items-center gap-1 font-semibold text-sidebar-primary"
             >
-              Mở permission matrix
+              Open permission matrix
               <ArrowUpRight className="size-4" />
             </Link>
           </div>
@@ -155,9 +192,27 @@ function MainLayout({ children }: MainLayoutProps) {
               <p className="text-sm font-medium text-foreground">{sectionLabel}</p>
             </div>
           </div>
-          <Button asChild variant="outline" className="hidden sm:inline-flex">
-            <Link to="/roles">Xuất cấu hình vai trò</Link>
-          </Button>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-medium text-foreground">
+                {session?.email ?? "Authenticated user"}
+              </p>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                {session?.roles?.[0] ?? "role-based session"}
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              <LogOut className="size-4" />
+              {isLoggingOut ? "Signing out..." : "Logout"}
+            </Button>
+          </div>
         </header>
 
         <main className="min-w-0 px-5 py-6 lg:px-8 lg:py-8">

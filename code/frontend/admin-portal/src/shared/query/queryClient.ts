@@ -13,6 +13,36 @@ const shouldShowErrorSource = import.meta.env.ENVIRONMENT === "development";
 const formatErrorMessage = (errorSource: string, errorMessage: string) =>
   shouldShowErrorSource ? `${errorSource}: ${errorMessage}` : errorMessage;
 
+const hasResponseStatus = (
+  error: unknown,
+): error is { response: { status: number } } => {
+  if (typeof error !== "object" || error === null || !("response" in error)) {
+    return false;
+  }
+
+  const response = error.response;
+
+  return (
+    typeof response === "object" &&
+    response !== null &&
+    "status" in response &&
+    typeof response.status === "number"
+  );
+};
+
+const hasErrorCode = (
+  error: unknown,
+): error is {
+  code: string;
+} => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+  );
+};
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -32,7 +62,7 @@ export const queryClient = new QueryClient({
       }
     },
     onError: (
-      error: any,
+      error: unknown,
       query: Query<unknown, unknown, unknown, QueryKey>,
     ): void => {
       if (axios.isAxiosError(error) && query.meta?.ERROR_SOURCE) {
@@ -50,7 +80,7 @@ export const queryClient = new QueryClient({
           formatErrorMessage(String(query.meta.ERROR_SOURCE), error.message),
         );
       }
-      if (error?.response && error.response.status === 404) {
+      if (hasResponseStatus(error) && error.response.status === 404) {
         // MessageService.error(`${error?.response?.data?.message}`);
       }
     },
@@ -75,12 +105,11 @@ export const queryClient = new QueryClient({
         //   formatErrorMessage(String(mutation.meta.ERROR_SOURCE), error.message),
         // );
       }
-      //@ts-expect-error  Error type 'AxiosError' is not assignable to type 'Error'.
-      if (error.code === "ERR_BAD_REQUEST" && mutation.meta?.ERROR_SOURCE) {
+      if (hasErrorCode(error) && error.code === "ERR_BAD_REQUEST" && mutation.meta?.ERROR_SOURCE) {
         // MessageService.error(
         //   formatErrorMessage(
         //     String(mutation.meta.ERROR_SOURCE),
-        //     (error as any).response?.data?.message,
+        //     "Bad request",
         //   ),
         // );
       }

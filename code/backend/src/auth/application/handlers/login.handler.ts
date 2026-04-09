@@ -2,7 +2,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
 import { CommandHandler, type ICommandHandler } from '@nestjs/cqrs';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 import {
   AUTH_USER_REPOSITORY,
@@ -65,4 +65,3 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
     };
   }
 }
-

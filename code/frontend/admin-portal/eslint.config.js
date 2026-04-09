@@ -14,11 +14,13 @@ export default defineConfig([
       tseslint.configs.recommended,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
-      reactRefresh.rules["only-export-components"],
     ],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+    },
+    rules: {
+      "react-refresh/only-export-components": "warn",
     },
   },
 ]);
