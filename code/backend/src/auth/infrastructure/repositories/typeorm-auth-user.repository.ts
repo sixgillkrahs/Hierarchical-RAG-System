@@ -52,6 +52,7 @@ export class TypeOrmAuthUserRepository implements AuthUserRepository {
       email: snapshot.email,
       roles: snapshot.roles,
       permissions: snapshot.permissions,
+      routes: snapshot.routes,
     };
   }
 
@@ -64,6 +65,15 @@ export class TypeOrmAuthUserRepository implements AuthUserRepository {
         ),
       ),
     ).sort();
+    const routes = Array.from(
+      new Set(
+        user.roles.flatMap((role: Role) =>
+          role.permissions
+            .map((permission) => permission.route.trim())
+            .filter((route) => route.length > 0),
+        ),
+      ),
+    ).sort();
 
     return {
       id: user.id,
@@ -72,7 +82,7 @@ export class TypeOrmAuthUserRepository implements AuthUserRepository {
       passwordHash: user.passwordHash,
       roles,
       permissions,
+      routes,
     };
   }
 }
-

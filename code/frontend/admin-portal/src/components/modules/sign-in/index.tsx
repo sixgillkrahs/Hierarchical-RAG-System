@@ -10,6 +10,7 @@ import {
   AUTH_SESSION_QUERY_KEY,
   setAuthSession,
 } from "../../../shared/auth/auth-session";
+import { getFirstAccessibleRoute } from "../../../shared/auth/route-access";
 import { queryClient } from "../../../shared/query/queryClient";
 import { Button } from "../../ui/button";
 import {
@@ -92,8 +93,9 @@ function SignInPage() {
       toast.success("Login successful", {
         description: response.message,
       });
+      const destination = getFirstAccessibleRoute(response.user.routes) ?? "/";
       startTransition(() => {
-        void navigate({ to: "/" });
+        void navigate({ to: destination });
       });
     } catch (error) {
       toast.error("Login failed", {

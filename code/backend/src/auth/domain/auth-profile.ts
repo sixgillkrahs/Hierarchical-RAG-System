@@ -3,5 +3,5 @@ export type AuthProfile = {
   id: string;
   permissions: string[];
   roles: string[];
+  routes: string[];
 };
-

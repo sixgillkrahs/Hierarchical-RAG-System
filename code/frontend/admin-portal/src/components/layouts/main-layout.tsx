@@ -10,6 +10,7 @@ import {
 import { startTransition, type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import AuthService from "../../shared/auth/AuthService";
+import { hasRouteAccess } from "../../shared/auth/route-access";
 import {
   setAuthSession,
   useAuthSession,
@@ -63,6 +64,9 @@ function MainLayout({ children }: MainLayoutProps) {
       icon: KeyRound,
     },
   ] as const;
+  const visibleNavigationItems = navigationItems.filter((item) =>
+    hasRouteAccess(session?.routes, item.to),
+  );
 
   const sectionLabel =
     pathname === "/"
@@ -133,7 +137,7 @@ function MainLayout({ children }: MainLayoutProps) {
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {navigationItems.map((item) => {
+                {visibleNavigationItems.map((item) => {
                   const Icon = item.icon;
                   const isActive =
                     pathname === item.to || pathname.startsWith(`${item.to}/`);

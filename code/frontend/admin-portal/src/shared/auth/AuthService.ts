@@ -6,6 +6,7 @@ export type AuthProfile = {
   email: string;
   roles: string[];
   permissions: string[];
+  routes: string[];
 };
 
 export type SignInPayload = {

@@ -16,6 +16,10 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { getAuthSession } from "../../shared/auth/auth-session";
+import {
+  getFirstAccessibleRoute,
+  hasRouteAccess,
+} from "../../shared/auth/route-access";
 import { queryClient } from "../../shared/query/queryClient";
 
 export const Route = createFileRoute("/_main/")({
@@ -27,6 +31,12 @@ export const Route = createFileRoute("/_main/")({
     if (!session) {
       throw redirect({
         to: "/auth/sign-in",
+      });
+    }
+
+    if (!hasRouteAccess(session.routes, "/")) {
+      throw redirect({
+        to: getFirstAccessibleRoute(session.routes) ?? "/auth/sign-in",
       });
     }
   },

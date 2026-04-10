@@ -34,17 +34,31 @@ export class RbacSeedService implements OnApplicationBootstrap {
 
   private async seedPermissions(): Promise<void> {
     const existingPermissions = await this.permissionRepository.find();
-    const existingCodes = new Set(existingPermissions.map(({ code }) => code));
+    const existingPermissionMap = new Map(
+      existingPermissions.map((permission) => [permission.code, permission]),
+    );
 
     const missingPermissions = DEFAULT_PERMISSION_DEFINITIONS.filter(
-      ({ code }) => !existingCodes.has(code),
-    ).map(({ code, description }) =>
-      this.permissionRepository.create({ code, description }),
+      ({ code }) => !existingPermissionMap.has(code),
+    ).map(({ code, description, route }) =>
+      this.permissionRepository.create({ code, description, route }),
     );
 
     if (missingPermissions.length > 0) {
       await this.permissionRepository.save(missingPermissions);
       this.logger.log(`Seeded ${missingPermissions.length} permissions.`);
+    }
+
+    for (const definition of DEFAULT_PERMISSION_DEFINITIONS) {
+      const existingPermission = existingPermissionMap.get(definition.code);
+
+      if (!existingPermission) {
+        continue;
+      }
+
+      existingPermission.description = definition.description;
+      existingPermission.route = definition.route;
+      await this.permissionRepository.save(existingPermission);
     }
   }
 

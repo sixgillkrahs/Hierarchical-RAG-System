@@ -6,6 +6,7 @@ export interface PermissionRepository {
   create(input: {
     code: string;
     description: string;
+    route: string;
   }): Promise<PermissionSummary>;
   findById(id: string): Promise<PermissionSummary | null>;
   findAll(): Promise<PermissionSummary[]>;
@@ -14,6 +15,7 @@ export interface PermissionRepository {
     input: {
       code?: string;
       description?: string;
+      route?: string;
     },
   ): Promise<PermissionSummary | null>;
   delete(id: string): Promise<PermissionSummary | null>;

@@ -10,6 +10,7 @@ import {
   PERMISSION_REPOSITORY,
   type PermissionRepository,
 } from '../../domain/permission.repository';
+import { normalizePermissionRoute } from '../../domain/permission-route';
 import type { PermissionSummary } from '../../domain/permission-summary';
 import { UpdatePermissionCommand } from '../commands/update-permission.command';
 
@@ -25,6 +26,10 @@ export class UpdatePermissionHandler
   async execute(command: UpdatePermissionCommand): Promise<PermissionSummary> {
     const code =
       typeof command.code === 'string' ? command.code.trim() : undefined;
+    const route =
+      typeof command.route === 'string'
+        ? normalizePermissionRoute(command.route)
+        : undefined;
     const description =
       typeof command.description === 'string'
         ? command.description.trim()
@@ -40,7 +45,11 @@ export class UpdatePermissionHandler
       );
     }
 
-    if (code === undefined && description === undefined) {
+    if (command.route !== undefined && !route) {
+      throw new BadRequestException('Permission route must not be empty.');
+    }
+
+    if (code === undefined && description === undefined && route === undefined) {
       throw new BadRequestException(
         'At least one permission field must be provided.',
       );
@@ -52,6 +61,7 @@ export class UpdatePermissionHandler
         {
           code,
           description,
+          route,
         },
       );
 

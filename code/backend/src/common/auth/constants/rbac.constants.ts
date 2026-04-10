@@ -1,15 +1,59 @@
 export const DEFAULT_PERMISSION_DEFINITIONS = [
-  { code: 'users.read', description: 'View users and their assigned roles.' },
-  { code: 'users.manage', description: 'Create, update, and deactivate users.' },
-  { code: 'roles.read', description: 'View role definitions.' },
-  { code: 'roles.manage', description: 'Create and update roles.' },
-  { code: 'permissions.read', description: 'View permission catalog.' },
-  { code: 'permissions.manage', description: 'Create and update permissions.' },
-  { code: 'storage.read', description: 'View storage folders and object metadata.' },
-  { code: 'storage.manage', description: 'Upload files and create storage folders.' },
-  { code: 'rag.read', description: 'View RAG service capabilities.' },
-  { code: 'rag.query', description: 'Execute RAG queries.' },
-  { code: 'system.read', description: 'Read system metadata.' },
+  {
+    code: 'users.read',
+    description: 'View users and their assigned roles.',
+    route: '/users',
+  },
+  {
+    code: 'users.manage',
+    description: 'Create, update, and deactivate users.',
+    route: '/users',
+  },
+  {
+    code: 'roles.read',
+    description: 'View role definitions.',
+    route: '/roles',
+  },
+  {
+    code: 'roles.manage',
+    description: 'Create and update roles.',
+    route: '/roles',
+  },
+  {
+    code: 'permissions.read',
+    description: 'View permission catalog.',
+    route: '/permissions',
+  },
+  {
+    code: 'permissions.manage',
+    description: 'Create and update permissions.',
+    route: '/permissions',
+  },
+  {
+    code: 'storage.read',
+    description: 'View storage folders and object metadata.',
+    route: '/storage',
+  },
+  {
+    code: 'storage.manage',
+    description: 'Upload files and create storage folders.',
+    route: '/storage',
+  },
+  {
+    code: 'rag.read',
+    description: 'View RAG service capabilities.',
+    route: '/rag',
+  },
+  {
+    code: 'rag.query',
+    description: 'Execute RAG queries.',
+    route: '/rag',
+  },
+  {
+    code: 'system.read',
+    description: 'Read system metadata.',
+    route: '/',
+  },
 ] as const;
 
 export const DEFAULT_ROLE_DEFINITIONS = [

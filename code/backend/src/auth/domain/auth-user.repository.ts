@@ -7,6 +7,7 @@ export type AuthUserSnapshot = {
   passwordHash: string;
   permissions: string[];
   roles: string[];
+  routes: string[];
 };
 
 export const AUTH_USER_REPOSITORY = Symbol('AUTH_USER_REPOSITORY');
@@ -15,4 +16,3 @@ export interface AuthUserRepository {
   findProfileByEmail(email: string): Promise<AuthUserSnapshot | null>;
   findProfileById(id: string): Promise<AuthProfile | null>;
 }
-

@@ -79,6 +79,7 @@ export class PermissionsController {
     >(
       new CreatePermissionCommand(
         createPermissionDto.code,
+        createPermissionDto.route,
         createPermissionDto.description ?? createPermissionDto.name ?? '',
       ),
     );
@@ -112,6 +113,7 @@ export class PermissionsController {
       new UpdatePermissionCommand(
         id,
         updatePermissionDto.code,
+        updatePermissionDto.route,
         updatePermissionDto.description ?? updatePermissionDto.name,
       ),
     );

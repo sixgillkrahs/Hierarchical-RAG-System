@@ -5,6 +5,7 @@ import {
   PERMISSION_REPOSITORY,
   type PermissionRepository,
 } from '../../domain/permission.repository';
+import { normalizePermissionRoute } from '../../domain/permission-route';
 import type { PermissionSummary } from '../../domain/permission-summary';
 import { CreatePermissionCommand } from '../commands/create-permission.command';
 
@@ -19,10 +20,15 @@ export class CreatePermissionHandler
 
   async execute(command: CreatePermissionCommand): Promise<PermissionSummary> {
     const code = command.code.trim();
+    const route = normalizePermissionRoute(command.route);
     const description = command.description.trim();
 
     if (!code) {
       throw new BadRequestException('Permission code must not be empty.');
+    }
+
+    if (!route) {
+      throw new BadRequestException('Permission route must not be empty.');
     }
 
     if (!description) {
@@ -35,6 +41,7 @@ export class CreatePermissionHandler
       return await this.permissionRepository.create({
         code,
         description,
+        route,
       });
     } catch (error) {
       const message =

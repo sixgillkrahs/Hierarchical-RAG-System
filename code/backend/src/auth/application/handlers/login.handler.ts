@@ -48,6 +48,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
       email: user.email,
       roles: [...user.roles].sort(),
       permissions: [...user.permissions].sort(),
+      routes: [...user.routes].sort(),
     };
 
     const token = await this.jwtService.signAsync({

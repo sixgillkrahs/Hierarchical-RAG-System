@@ -12,6 +12,15 @@ export class UpdatePermissionDto {
   code?: string;
 
   @ApiPropertyOptional({
+    example: '/permissions',
+    description: 'Updated frontend route unlocked by this permission.',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  route?: string;
+
+  @ApiPropertyOptional({
     example: 'Create, update, and delete permissions.',
     description:
       'Updated human-readable permission description. Preferred over the deprecated name field.',

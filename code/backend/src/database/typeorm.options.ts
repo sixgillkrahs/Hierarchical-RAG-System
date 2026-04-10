@@ -5,6 +5,7 @@ import { Permission } from '../permissions/entities/permission.entity';
 import { Role } from '../roles/entities/role.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateRbacTables1712400000000 } from './migrations/1712400000000-create-rbac-tables';
+import { AddPermissionRoutes1712400000001 } from './migrations/1712400000001-add-permission-routes';
 
 type DbEnv = {
   DB_DATABASE?: unknown;
@@ -84,7 +85,10 @@ export function createTypeOrmOptions(env: DbEnv): TypeOrmModuleOptions {
     ssl: toBoolean(env.DB_SSL, false) ? { rejectUnauthorized: false } : false,
     entities,
     logging,
-    migrations: [CreateRbacTables1712400000000],
+    migrations: [
+      CreateRbacTables1712400000000,
+      AddPermissionRoutes1712400000001,
+    ],
     migrationsRun: toBoolean(env.DB_RUN_MIGRATIONS, true),
     synchronize,
   };
@@ -93,4 +97,3 @@ export function createTypeOrmOptions(env: DbEnv): TypeOrmModuleOptions {
 export function createDataSourceOptions(env: DbEnv): DataSourceOptions {
   return createTypeOrmOptions(env) as DataSourceOptions;
 }
-

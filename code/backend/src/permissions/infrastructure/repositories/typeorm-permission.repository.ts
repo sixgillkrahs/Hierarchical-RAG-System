@@ -18,16 +18,19 @@ export class TypeOrmPermissionRepository implements PermissionRepository {
       id: permission.id,
       code: permission.code,
       description: permission.description,
+      route: permission.route,
     };
   }
 
   async create(input: {
     code: string;
     description: string;
+    route: string;
   }): Promise<PermissionSummary> {
     const permission = this.permissionRepository.create({
       code: input.code,
       description: input.description,
+      route: input.route,
     });
 
     const savedPermission = await this.permissionRepository.save(permission);
@@ -58,6 +61,7 @@ export class TypeOrmPermissionRepository implements PermissionRepository {
     input: {
       code?: string;
       description?: string;
+      route?: string;
     },
   ): Promise<PermissionSummary | null> {
     const permission = await this.permissionRepository.findOne({
@@ -74,6 +78,10 @@ export class TypeOrmPermissionRepository implements PermissionRepository {
 
     if (input.description !== undefined) {
       permission.description = input.description;
+    }
+
+    if (input.route !== undefined) {
+      permission.route = input.route;
     }
 
     const savedPermission = await this.permissionRepository.save(permission);

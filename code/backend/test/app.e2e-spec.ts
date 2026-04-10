@@ -72,11 +72,13 @@ describe('Auth and RBAC (e2e)', () => {
       .expect(200);
 
     const loginBody = loginResponse.body as {
+      routes: string[];
       success: boolean;
       user: {
         email: string;
         permissions: string[];
         roles: string[];
+        routes: string[];
       };
     };
     const setCookie = loginResponse.headers['set-cookie'] as string[] | undefined;
@@ -85,13 +87,15 @@ describe('Auth and RBAC (e2e)', () => {
     expect(loginBody.user.email).toBe('admin@company.com');
     expect(loginBody.user.roles).toContain('super_admin');
     expect(loginBody.user.permissions).toContain('roles.read');
+    expect(loginBody.user.routes).toContain('/roles');
     expect(setCookie?.some((cookie) => cookie.includes('HttpOnly'))).toBe(true);
 
     await agent
       .get('/api/v1/auth/me')
       .expect(200)
-      .expect(({ body }: { body: { email: string } }) => {
+      .expect(({ body }: { body: { email: string; routes: string[] } }) => {
         expect(body.email).toBe('admin@company.com');
+        expect(body.routes).toContain('/permissions');
       });
 
     await agent
@@ -137,6 +141,7 @@ describe('Auth and RBAC (e2e)', () => {
       .send({
         code: 'documents.approve',
         description: 'Approve documents before publishing.',
+        route: '/documents',
       })
       .expect(200);
 
@@ -144,12 +149,14 @@ describe('Auth and RBAC (e2e)', () => {
       code: string;
       description: string;
       id: string;
+      route: string;
     };
 
     expect(createdPermission.code).toBe('documents.approve');
     expect(createdPermission.description).toBe(
       'Approve documents before publishing.',
     );
+    expect(createdPermission.route).toBe('/documents');
 
     await agent
       .get(`/api/v1/permissions/${createdPermission.id}`)
@@ -158,10 +165,11 @@ describe('Auth and RBAC (e2e)', () => {
         ({
           body,
         }: {
-          body: { code: string; description: string; id: string };
+          body: { code: string; description: string; id: string; route: string };
         }) => {
           expect(body.id).toBe(createdPermission.id);
           expect(body.code).toBe('documents.approve');
+          expect(body.route).toBe('/documents');
         },
       );
 
@@ -169,17 +177,19 @@ describe('Auth and RBAC (e2e)', () => {
       .patch(`/api/v1/permissions/${createdPermission.id}`)
       .send({
         description: 'Approve and publish documents.',
+        route: '/documents/review',
       })
       .expect(200)
       .expect(
         ({
           body,
         }: {
-          body: { permission: { description: string } };
+          body: { permission: { description: string; route: string } };
         }) => {
           expect(body.permission.description).toBe(
             'Approve and publish documents.',
           );
+          expect(body.permission.route).toBe('/documents/review');
         },
       );
 

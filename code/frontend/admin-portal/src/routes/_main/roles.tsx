@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import {
@@ -8,8 +8,31 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import { getAuthSession } from "../../shared/auth/auth-session";
+import {
+  getFirstAccessibleRoute,
+  hasRouteAccess,
+} from "../../shared/auth/route-access";
+import { queryClient } from "../../shared/query/queryClient";
 
 export const Route = createFileRoute("/_main/roles")({
+  beforeLoad: async () => {
+    const session = await getAuthSession(queryClient, {
+      suppressErrors: true,
+    });
+
+    if (!session) {
+      throw redirect({
+        to: "/auth/sign-in",
+      });
+    }
+
+    if (!hasRouteAccess(session.routes, "/roles")) {
+      throw redirect({
+        to: getFirstAccessibleRoute(session.routes) ?? "/auth/sign-in",
+      });
+    }
+  },
   component: RouteComponent,
 });
 

@@ -10,6 +10,14 @@ export class CreatePermissionDto {
   @IsString()
   code!: string;
 
+  @ApiProperty({
+    example: '/permissions',
+    description: 'Frontend route unlocked by this permission.',
+  })
+  @IsNotEmpty()
+  @IsString()
+  route!: string;
+
   @ApiPropertyOptional({
     example: 'Create and update permissions.',
     description:
