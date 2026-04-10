@@ -1,5 +1,5 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
-import MainLayout from "../components/layouts/main-layout";
+import MainLayout from "@/presentation/components/layouts/main-layout";
 import { getAuthSession } from "../shared/auth/auth-session";
 import { queryClient } from "../shared/query/queryClient";
 

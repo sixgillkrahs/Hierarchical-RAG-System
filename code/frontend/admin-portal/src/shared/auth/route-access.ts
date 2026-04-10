@@ -10,7 +10,7 @@ const normalizeRoute = (route: string) => {
 
 export const hasRouteAccess = (routes: string[] | undefined, targetRoute: string) => {
   if (!routes || routes.length === 0) {
-    return false;
+    return targetRoute === "/";
   }
 
   const normalizedTargetRoute = normalizeRoute(targetRoute);
@@ -20,7 +20,7 @@ export const hasRouteAccess = (routes: string[] | undefined, targetRoute: string
 
 export const getFirstAccessibleRoute = (routes: string[] | undefined) => {
   if (!routes || routes.length === 0) {
-    return null;
+    return "/";
   }
 
   const normalizedRoutes = Array.from(new Set(routes.map(normalizeRoute))).sort();

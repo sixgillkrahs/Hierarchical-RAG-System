@@ -6,21 +6,21 @@ import {
   ShieldCheck,
   UsersRound,
 } from "lucide-react";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
+import { Badge } from "@/presentation/components/ui/badge";
+import { Button } from "@/presentation/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { getAuthSession } from "../../shared/auth/auth-session";
+} from "@/presentation/components/ui/card";
+import { getAuthSession } from "@/shared/auth/auth-session";
 import {
   getFirstAccessibleRoute,
   hasRouteAccess,
-} from "../../shared/auth/route-access";
-import { queryClient } from "../../shared/query/queryClient";
+} from "@/shared/auth/route-access";
+import { queryClient } from "@/shared/query/queryClient";
 
 export const Route = createFileRoute("/_main/")({
   beforeLoad: async () => {
@@ -89,10 +89,26 @@ const governancePillars = [
 ] as const;
 
 const rolloutChecklist = [
-  { title: "Khóa nhóm quyền nhạy cảm", state: "Done", variant: "success" as const },
-  { title: "So khớp role giữa các môi trường", state: "In review", variant: "warning" as const },
-  { title: "Gắn audit trail cho revoke flow", state: "Planned", variant: "outline" as const },
-  { title: "Chốt owner cho từng module", state: "Done", variant: "success" as const },
+  {
+    title: "Khóa nhóm quyền nhạy cảm",
+    state: "Done",
+    variant: "success" as const,
+  },
+  {
+    title: "So khớp role giữa các môi trường",
+    state: "In review",
+    variant: "warning" as const,
+  },
+  {
+    title: "Gắn audit trail cho revoke flow",
+    state: "Planned",
+    variant: "outline" as const,
+  },
+  {
+    title: "Chốt owner cho từng module",
+    state: "Done",
+    variant: "success" as const,
+  },
 ] as const;
 
 const accessEvents = [
@@ -170,13 +186,17 @@ function RouteComponent() {
               <Card key={stat.label}>
                 <CardContent className="space-y-4 p-6">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{stat.label}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {stat.label}
+                    </span>
                     <div className="rounded-full border border-border/70 bg-background/70 p-2">
                       <Icon className="size-4 text-primary" />
                     </div>
                   </div>
                   <div>
-                    <p className="text-3xl font-semibold tracking-tight">{stat.value}</p>
+                    <p className="text-3xl font-semibold tracking-tight">
+                      {stat.value}
+                    </p>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       {stat.detail}
                     </p>
@@ -193,7 +213,8 @@ function RouteComponent() {
           <CardHeader>
             <CardTitle>Nguyên tắc thiết kế quyền</CardTitle>
             <CardDescription>
-              Bộ nguyên tắc này giúp UI không chỉ đẹp mà còn bám sát luồng triển khai RBAC thật.
+              Bộ nguyên tắc này giúp UI không chỉ đẹp mà còn bám sát luồng triển
+              khai RBAC thật.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -218,7 +239,8 @@ function RouteComponent() {
           <CardHeader>
             <CardTitle>Checklist triển khai</CardTitle>
             <CardDescription>
-              Trạng thái các hạng mục cần chốt trước khi bật quyền trên production.
+              Trạng thái các hạng mục cần chốt trước khi bật quyền trên
+              production.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -241,7 +263,8 @@ function RouteComponent() {
         <CardHeader>
           <CardTitle>Access events gần nhất</CardTitle>
           <CardDescription>
-            Log mẫu để bạn hình dung khu vực theo dõi thay đổi quyền và request nhạy cảm.
+            Log mẫu để bạn hình dung khu vực theo dõi thay đổi quyền và request
+            nhạy cảm.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">

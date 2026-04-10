@@ -5,7 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
+} from "@/presentation/components/ui/card";
 import { getAuthSession } from "../../shared/auth/auth-session";
 import {
   getFirstAccessibleRoute,

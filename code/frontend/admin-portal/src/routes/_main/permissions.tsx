@@ -1,11 +1,11 @@
-import Permissions from "@/components/modules/permissions";
+import Permissions from "@/presentation/components/modules/permissions";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getAuthSession } from "../../shared/auth/auth-session";
+import { getAuthSession } from "@/shared/auth/auth-session";
 import {
   getFirstAccessibleRoute,
   hasRouteAccess,
-} from "../../shared/auth/route-access";
-import { queryClient } from "../../shared/query/queryClient";
+} from "@/shared/auth/route-access";
+import { queryClient } from "@/shared/query/queryClient";
 
 export const Route = createFileRoute("/_main/permissions")({
   beforeLoad: async () => {

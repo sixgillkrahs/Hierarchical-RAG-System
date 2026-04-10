@@ -1,20 +1,20 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
+import { Badge } from "@/presentation/components/ui/badge";
+import { Button } from "@/presentation/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { getAuthSession } from "../../shared/auth/auth-session";
+} from "@/presentation/components/ui/card";
+import { Input } from "@/presentation/components/ui/input";
+import { getAuthSession } from "@/shared/auth/auth-session";
 import {
   getFirstAccessibleRoute,
   hasRouteAccess,
-} from "../../shared/auth/route-access";
-import { queryClient } from "../../shared/query/queryClient";
+} from "@/shared/auth/route-access";
+import { queryClient } from "@/shared/query/queryClient";
 
 export const Route = createFileRoute("/_main/users")({
   beforeLoad: async () => {
@@ -38,9 +38,21 @@ export const Route = createFileRoute("/_main/users")({
 });
 
 const userStats = [
-  { label: "Tài khoản nội bộ", value: "146", detail: "12 tài khoản mới trong 30 ngày" },
-  { label: "Vendor access", value: "18", detail: "4 tài khoản hết hạn trong tuần này" },
-  { label: "Quyền cần review", value: "11", detail: "Chưa hoàn tất quarterly review" },
+  {
+    label: "Tài khoản nội bộ",
+    value: "146",
+    detail: "12 tài khoản mới trong 30 ngày",
+  },
+  {
+    label: "Vendor access",
+    value: "18",
+    detail: "4 tài khoản hết hạn trong tuần này",
+  },
+  {
+    label: "Quyền cần review",
+    value: "11",
+    detail: "Chưa hoàn tất quarterly review",
+  },
 ] as const;
 
 const users = [
@@ -114,7 +126,8 @@ function RouteComponent() {
               </CardTitle>
               <CardDescription className="max-w-2xl text-base leading-8">
                 Màn hình này tập trung cho bài toán cấp quyền theo role bundle,
-                quản lý user lifecycle và review định kỳ để tránh privilege creep.
+                quản lý user lifecycle và review định kỳ để tránh privilege
+                creep.
               </CardDescription>
             </div>
           </CardHeader>
@@ -146,7 +159,8 @@ function RouteComponent() {
           <CardHeader>
             <CardTitle>Luồng cấp quyền đề xuất</CardTitle>
             <CardDescription>
-              Mỗi request truy cập nên đi qua chuỗi bước giống nhau để UI dễ scale.
+              Mỗi request truy cập nên đi qua chuỗi bước giống nhau để UI dễ
+              scale.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -158,7 +172,9 @@ function RouteComponent() {
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
                   {index + 1}
                 </div>
-                <p className="pt-1 text-sm leading-7 text-foreground/85">{step}</p>
+                <p className="pt-1 text-sm leading-7 text-foreground/85">
+                  {step}
+                </p>
               </div>
             ))}
           </CardContent>
@@ -172,10 +188,14 @@ function RouteComponent() {
               <div>
                 <CardTitle>Danh sách user và role assignment</CardTitle>
                 <CardDescription>
-                  Dạng hiển thị này phù hợp để nối API danh sách người dùng và thao tác gán role.
+                  Dạng hiển thị này phù hợp để nối API danh sách người dùng và
+                  thao tác gán role.
                 </CardDescription>
               </div>
-              <Input className="w-full max-w-sm" placeholder="Tìm theo email, role hoặc bộ phận" />
+              <Input
+                className="w-full max-w-sm"
+                placeholder="Tìm theo email, role hoặc bộ phận"
+              />
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -186,7 +206,9 @@ function RouteComponent() {
               >
                 <div>
                   <p className="text-lg font-semibold">{user.name}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {user.email}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -225,7 +247,8 @@ function RouteComponent() {
             <CardHeader>
               <CardTitle>Yêu cầu chờ duyệt</CardTitle>
               <CardDescription>
-                Các request nhạy cảm nên được gom về khu vực riêng để reviewer xử lý.
+                Các request nhạy cảm nên được gom về khu vực riêng để reviewer
+                xử lý.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -245,7 +268,9 @@ function RouteComponent() {
               <CardTitle>Quy tắc review</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm leading-7 text-muted-foreground">
-              <p>Mọi tài khoản có role nhạy cảm cần owner phê duyệt trực tiếp.</p>
+              <p>
+                Mọi tài khoản có role nhạy cảm cần owner phê duyệt trực tiếp.
+              </p>
               <p>Vendor access phải có ngày hết hạn và scope rõ ràng.</p>
               <p>Role tạm thời cần được thu hồi tự động nếu quá hạn.</p>
             </CardContent>

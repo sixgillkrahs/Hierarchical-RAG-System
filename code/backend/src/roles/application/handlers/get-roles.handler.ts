@@ -2,21 +2,24 @@ import { Inject } from '@nestjs/common';
 import { QueryHandler, type IQueryHandler } from '@nestjs/cqrs';
 
 import {
-  ROLE_READ_REPOSITORY,
-  type RoleReadRepository,
+  ROLE_REPOSITORY,
+  type RoleRepository,
+  type PaginatedResult,
 } from '../../domain/role-read.repository';
 import type { RoleSummary } from '../../domain/role-summary';
 import { GetRolesQuery } from '../queries/get-roles.query';
 
 @QueryHandler(GetRolesQuery)
-export class GetRolesHandler implements IQueryHandler<GetRolesQuery, RoleSummary[]> {
+export class GetRolesHandler
+  implements IQueryHandler<GetRolesQuery, PaginatedResult<RoleSummary>>
+{
   constructor(
-    @Inject(ROLE_READ_REPOSITORY)
-    private readonly roleReadRepository: RoleReadRepository,
+    @Inject(ROLE_REPOSITORY)
+    private readonly roleRepository: RoleRepository,
   ) {}
 
-  execute(): Promise<RoleSummary[]> {
-    return this.roleReadRepository.findAll();
+  execute(query: GetRolesQuery): Promise<PaginatedResult<RoleSummary>> {
+    return this.roleRepository.findPaginated(query.page, query.limit);
   }
 }
 

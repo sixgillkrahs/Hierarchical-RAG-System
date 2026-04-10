@@ -1,5 +1,5 @@
-import { AxiosMethod } from "../../lib/axios/method";
-import request from "../../lib/axios/request";
+import { AxiosMethod } from "@/infrastructure/lib/axios/method";
+import request from "@/infrastructure/lib/axios/request";
 
 export type AuthProfile = {
   id: string;
