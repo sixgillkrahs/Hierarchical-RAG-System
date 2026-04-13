@@ -1,12 +1,14 @@
+import type { GetPaginatedParams } from "@/shared/types";
 import type {
-  RoleEntity,
-  GetRolesParams,
   PaginatedResult,
+  RoleEntity,
 } from "@/domain/entities/role.entity";
 import { RolesApi } from "@/infrastructure/api/roles.api";
 
 export const roleRepository = {
-  async getRoles(params: GetRolesParams): Promise<PaginatedResult<RoleEntity>> {
+  async getRoles(
+    params: GetPaginatedParams,
+  ): Promise<PaginatedResult<RoleEntity>> {
     return RolesApi.getAll(params);
   },
 };

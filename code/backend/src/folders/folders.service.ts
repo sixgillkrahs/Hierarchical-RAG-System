@@ -9,7 +9,9 @@ import { ConfigService } from '@nestjs/config';
 
 import type { CreateFolderDto } from './dto/create-folder.dto';
 import type { DeleteFolderDto } from './dto/delete-folder.dto';
+import type { DeleteFoldersDto } from './dto/delete-folders.dto';
 import type {
+  FolderBulkDeleteResponseDto,
   FolderCreateResponseDto,
   FolderDeleteResponseDto,
   FolderListResponseDto,
@@ -85,15 +87,30 @@ export class FoldersService {
   async deleteFolder(
     payload: DeleteFolderDto,
   ): Promise<FolderDeleteResponseDto> {
-    const response = await this.request<FolderDeleteResponseDto>('/folders', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+    const response = await this.deleteFolderRequest(payload);
 
     this.clearCache();
+    return response;
+  }
+
+  async deleteFolders(
+    payload: DeleteFoldersDto,
+  ): Promise<FolderBulkDeleteResponseDto> {
+    const response = await this.request<FolderBulkDeleteResponseDto>(
+      '/folders/bulk-delete',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      },
+    );
+
+    if (response.succeeded > 0) {
+      this.clearCache();
+    }
+
     return response;
   }
 
@@ -114,6 +131,18 @@ export class FoldersService {
 
   private clearCache(): void {
     this.folderCache.clear();
+  }
+
+  private deleteFolderRequest(
+    payload: DeleteFolderDto,
+  ): Promise<FolderDeleteResponseDto> {
+    return this.request<FolderDeleteResponseDto>('/folders', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
   }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {

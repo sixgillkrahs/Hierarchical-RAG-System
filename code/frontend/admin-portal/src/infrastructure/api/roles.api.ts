@@ -1,19 +1,19 @@
-import { AxiosMethod } from "@/infrastructure/lib/axios/method";
-import request from "@/infrastructure/lib/axios/request";
 import type {
-  RoleEntity,
-  GetRolesParams,
-  PaginatedResult,
   CreateRolePayload,
   CreateRoleResponse,
+  PaginatedResult,
+  RoleEntity,
   UpdateRolePayload,
   UpdateRoleResponse,
 } from "@/domain/entities/role.entity";
+import { AxiosMethod } from "@/infrastructure/lib/axios/method";
+import request from "@/infrastructure/lib/axios/request";
+import type { GetPaginatedParams } from "@/shared/types";
 
 export type DeleteRoleResponse = { message: string; role: RoleEntity };
 
 export const RolesApi = {
-  getAll: (params?: GetRolesParams): Promise<PaginatedResult<RoleEntity>> =>
+  getAll: (params?: GetPaginatedParams): Promise<PaginatedResult<RoleEntity>> =>
     request({
       url: "/roles",
       method: AxiosMethod.GET,
@@ -27,7 +27,10 @@ export const RolesApi = {
       data: payload,
     }) as Promise<CreateRoleResponse>,
 
-  update: ({ id, ...payload }: UpdateRolePayload): Promise<UpdateRoleResponse> =>
+  update: ({
+    id,
+    ...payload
+  }: UpdateRolePayload): Promise<UpdateRoleResponse> =>
     request({
       url: `/roles/${id}`,
       method: AxiosMethod.PATCH,

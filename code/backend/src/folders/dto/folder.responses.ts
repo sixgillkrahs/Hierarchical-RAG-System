@@ -50,6 +50,46 @@ export class FolderDeleteResponseDto {
   deleted_objects!: number;
 }
 
+export class FolderBulkDeleteItemResponseDto {
+  @ApiProperty({ example: 'documents/contracts/2026' })
+  folder_path!: string;
+
+  @ApiProperty({ example: true })
+  success!: boolean;
+
+  @ApiProperty({ example: 'documents/contracts/2026/', required: false })
+  prefix?: string;
+
+  @ApiProperty({ example: 'uploads', required: false })
+  bucket?: string;
+
+  @ApiProperty({ example: 5, required: false })
+  deleted_objects?: number;
+
+  @ApiProperty({ example: 404, required: false })
+  status_code?: number;
+
+  @ApiProperty({
+    example: 'Folder not found.',
+    required: false,
+  })
+  error?: string;
+}
+
+export class FolderBulkDeleteResponseDto {
+  @ApiProperty({ example: 3 })
+  total!: number;
+
+  @ApiProperty({ example: 2 })
+  succeeded!: number;
+
+  @ApiProperty({ example: 1 })
+  failed!: number;
+
+  @ApiProperty({ type: [FolderBulkDeleteItemResponseDto] })
+  results!: FolderBulkDeleteItemResponseDto[];
+}
+
 export class FolderRenameResponseDto {
   @ApiProperty({ example: 'documents/contracts/2026' })
   old_path!: string;

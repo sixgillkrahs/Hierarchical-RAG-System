@@ -2,21 +2,23 @@ import { Inject } from '@nestjs/common';
 import { QueryHandler, type IQueryHandler } from '@nestjs/cqrs';
 
 import {
-  USER_READ_REPOSITORY,
-  type UserReadRepository,
-} from '../../domain/user-read.repository';
+  type PaginatedResult,
+  USER_REPOSITORY,
+  type UserRepository,
+} from '../../domain/user.repository';
 import type { UserSummary } from '../../domain/user-summary';
 import { GetUsersQuery } from '../queries/get-users.query';
 
 @QueryHandler(GetUsersQuery)
-export class GetUsersHandler implements IQueryHandler<GetUsersQuery, UserSummary[]> {
+export class GetUsersHandler
+  implements IQueryHandler<GetUsersQuery, PaginatedResult<UserSummary>>
+{
   constructor(
-    @Inject(USER_READ_REPOSITORY)
-    private readonly userReadRepository: UserReadRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: UserRepository,
   ) {}
 
-  execute(): Promise<UserSummary[]> {
-    return this.userReadRepository.findAll();
+  execute(query: GetUsersQuery): Promise<PaginatedResult<UserSummary>> {
+    return this.userRepository.findPaginated(query.page, query.limit);
   }
 }
-

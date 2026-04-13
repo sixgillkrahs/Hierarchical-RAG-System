@@ -31,9 +31,8 @@ const RoleDetailSheet = memo(({ role }: RoleDetailSheetProps) => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="sm" variant="ghost">
+        <Button size="icon-sm" variant="ghost" className="text-muted-foreground">
           <Eye className="size-4" />
-          Chi tiết
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md">

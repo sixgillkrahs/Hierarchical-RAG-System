@@ -43,6 +43,35 @@ class FolderDeleteResponse(BaseModel):
     deleted_objects: int
 
 
+class FolderBulkDeleteRequest(BaseModel):
+    folder_paths: list[str] = Field(
+        ...,
+        examples=[
+            ["documents/contracts/2025", "documents/contracts/2026"],
+            ["users/001/avatars", "users/001/documents"],
+        ],
+        description="Folder-like paths to delete recursively from MinIO.",
+        min_length=1,
+    )
+
+
+class FolderBulkDeleteItemResponse(BaseModel):
+    folder_path: str
+    success: bool
+    prefix: str | None = None
+    bucket: str | None = None
+    deleted_objects: int | None = None
+    status_code: int | None = None
+    error: str | None = None
+
+
+class FolderBulkDeleteResponse(BaseModel):
+    total: int
+    succeeded: int
+    failed: int
+    results: list[FolderBulkDeleteItemResponse]
+
+
 class FolderRenameRequest(BaseModel):
     current_path: str = Field(
         ...,

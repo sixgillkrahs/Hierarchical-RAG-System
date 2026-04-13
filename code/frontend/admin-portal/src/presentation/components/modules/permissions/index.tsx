@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { useCallback, useState } from "react";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import {
@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../ui/card";
+import { DataTable } from "../../ui/data-table";
 import { AddPermissionSheet } from "./add-permission-sheet";
 import { EditPermissionSheet } from "./edit-permission-sheet";
 
@@ -22,7 +23,12 @@ type PermissionRow = {
   route: string;
   description: string;
   status: string;
-  statusVariant: "outline" | "destructive" | "warning" | "default" | "secondary";
+  statusVariant:
+    | "outline"
+    | "destructive"
+    | "warning"
+    | "default"
+    | "secondary";
 };
 
 /* ─── Static seed for development ─── */
@@ -72,13 +78,18 @@ const Permissions = () => {
       module: string;
       description: string;
       status: string;
-      statusVariant: "outline" | "destructive" | "warning" | "default" | "secondary";
+      statusVariant:
+        | "outline"
+        | "destructive"
+        | "warning"
+        | "default"
+        | "secondary";
     }) => {
       setPermissions((prev) => [
         {
           id: newPermission.id,
-          code: newPermission.id,        // AddPermissionSheet sets id = code
-          route: newPermission.module,   // AddPermissionSheet sets module = route
+          code: newPermission.id, // AddPermissionSheet sets id = code
+          route: newPermission.module, // AddPermissionSheet sets module = route
           description: newPermission.description,
           status: newPermission.status,
           statusVariant: newPermission.statusVariant,
@@ -91,11 +102,21 @@ const Permissions = () => {
 
   /* EditPermissionSheet callback */
   const handleUpdatePermission = useCallback(
-    (updated: { id: string; code: string; route: string; description: string }) => {
+    (updated: {
+      id: string;
+      code: string;
+      route: string;
+      description: string;
+    }) => {
       setPermissions((prev) =>
         prev.map((p) =>
           p.id === updated.id
-            ? { ...p, code: updated.code, route: updated.route, description: updated.description }
+            ? {
+                ...p,
+                code: updated.code,
+                route: updated.route,
+                description: updated.description,
+              }
             : p,
         ),
       );
@@ -119,60 +140,51 @@ const Permissions = () => {
 
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] border-separate border-spacing-0">
-              <thead>
-                <tr className="text-left">
-                  <th className="border-b border-border/70 pb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Mã quyền
-                  </th>
-                  <th className="border-b border-border/70 pb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Route
-                  </th>
-                  <th className="border-b border-border/70 pb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Mô tả
-                  </th>
-                  <th className="border-b border-border/70 pb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Trạng thái
-                  </th>
-                  <th className="border-b border-border/70 pb-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {permissions.map((permission) => (
-                  <tr key={permission.id}>
-                    <td className="border-b border-border/50 py-4 pr-4 text-sm font-medium">
-                      {permission.code}
-                    </td>
-                    <td className="border-b border-border/50 py-4 pr-4 text-sm text-muted-foreground">
-                      {permission.route}
-                    </td>
-                    <td className="border-b border-border/50 py-4 pr-4 text-sm text-muted-foreground">
-                      {permission.description}
-                    </td>
-                    <td className="border-b border-border/50 py-4 pr-4">
-                      <Badge variant={permission.statusVariant}>
-                        {permission.status}
-                      </Badge>
-                    </td>
-                    <td className="border-b border-border/50 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <EditPermissionSheet
-                          permission={permission}
-                          onUpdated={handleUpdatePermission}
-                        />
-                        <Button size="sm" variant="ghost">
-                          <Trash2 className="size-4" />
-                          Xóa
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable
+              className="min-w-[720px]"
+              columns={[
+                {
+                  header: "Mã quyền",
+                  accessorKey: "code",
+                  cellClassName: "font-medium",
+                },
+                {
+                  header: "Route",
+                  accessorKey: "route",
+                  cellClassName: "text-muted-foreground",
+                },
+                {
+                  header: "Mô tả",
+                  accessorKey: "description",
+                  cellClassName: "text-muted-foreground",
+                },
+                {
+                  header: "Trạng thái",
+                  cell: (permission) => (
+                    <Badge variant={permission.statusVariant}>
+                      {permission.status}
+                    </Badge>
+                  ),
+                },
+                {
+                  header: "Thao tác",
+                  className: "text-right",
+                  cell: (permission) => (
+                    <div className="flex justify-end gap-2">
+                      <EditPermissionSheet
+                        permission={permission}
+                        onUpdated={handleUpdatePermission}
+                      />
+                      <Button size="icon-sm" variant="ghost" className="text-destructive hover:bg-destructive/10">
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+              data={permissions}
+              emptyMessage="Chưa có quyền nào. Hãy thêm quyền đầu tiên!"
+            />
           </div>
         </CardContent>
       </Card>

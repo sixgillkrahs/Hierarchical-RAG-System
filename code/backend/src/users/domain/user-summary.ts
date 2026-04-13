@@ -5,6 +5,7 @@ export type UserSummary = {
   id: string;
   isActive: boolean;
   permissions: string[];
+  roleIds: string[];
   roles: string[];
+  updatedAt: Date;
 };
-

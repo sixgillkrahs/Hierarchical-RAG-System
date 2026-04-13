@@ -7,6 +7,7 @@ import {
   type QueryKey,
 } from "@tanstack/react-query";
 import axios from "axios";
+import { toast } from "sonner";
 
 const shouldShowErrorSource = import.meta.env.ENVIRONMENT === "development";
 
@@ -57,8 +58,7 @@ export const queryClient = new QueryClient({
       query: Query<unknown, unknown, unknown, QueryKey>,
     ): void => {
       if (query.meta?.SUCCESS_MESSAGE) {
-        // toast.success(`${query.meta.SUCCESS_MESSAGE}:`);
-        console.log(`${query.meta.SUCCESS_MESSAGE}:`);
+        toast.success(String(query.meta.SUCCESS_MESSAGE));
       }
     },
     onError: (
@@ -66,22 +66,18 @@ export const queryClient = new QueryClient({
       query: Query<unknown, unknown, unknown, QueryKey>,
     ): void => {
       if (axios.isAxiosError(error) && query.meta?.ERROR_SOURCE) {
-        // toast.error(`${query.meta.ERROR_SOURCE}: ${error.response?.data?.message}`);
-        console.error(
-          formatErrorMessage(
-            String(query.meta.ERROR_SOURCE),
-            error.response?.data?.message || error.message,
-          ),
+        const message = formatErrorMessage(
+          String(query.meta.ERROR_SOURCE),
+          error.response?.data?.message || error.message,
         );
-      }
-      if (error instanceof Error && query.meta?.ERROR_SOURCE) {
-        // toast.error(`${query.meta.ERROR_SOURCE}: ${error.message}`);
-        console.error(
-          formatErrorMessage(String(query.meta.ERROR_SOURCE), error.message),
-        );
-      }
-      if (hasResponseStatus(error) && error.response.status === 404) {
-        // MessageService.error(`${error?.response?.data?.message}`);
+        toast.error(message);
+        console.error(message);
+      } else if (error instanceof Error && query.meta?.ERROR_SOURCE) {
+        const message = formatErrorMessage(String(query.meta.ERROR_SOURCE), error.message);
+        toast.error(message);
+        console.error(message);
+      } else if (hasResponseStatus(error) && error.response.status === 404) {
+        toast.error(`${(error as any)?.response?.data?.message}`);
       }
     },
   }),
@@ -93,25 +89,27 @@ export const queryClient = new QueryClient({
       mutation: Mutation<unknown, unknown, unknown, unknown>,
     ): void => {
       if (axios.isAxiosError(error) && mutation.meta?.ERROR_SOURCE) {
-        // MessageService.error(
-        //   formatErrorMessage(
-        //     String(mutation.meta.ERROR_SOURCE),
-        //     error.response?.data?.message || error.message,
-        //   ),
-        // );
-      }
-      if (error instanceof Error && mutation.meta?.ERROR_SOURCE) {
-        // MessageService.error(
-        //   formatErrorMessage(String(mutation.meta.ERROR_SOURCE), error.message),
-        // );
-      }
-      if (hasErrorCode(error) && error.code === "ERR_BAD_REQUEST" && mutation.meta?.ERROR_SOURCE) {
-        // MessageService.error(
-        //   formatErrorMessage(
-        //     String(mutation.meta.ERROR_SOURCE),
-        //     "Bad request",
-        //   ),
-        // );
+        toast.error(
+          formatErrorMessage(
+            String(mutation.meta.ERROR_SOURCE),
+            error.response?.data?.message || error.message,
+          ),
+        );
+      } else if (error instanceof Error && mutation.meta?.ERROR_SOURCE) {
+        toast.error(
+          formatErrorMessage(String(mutation.meta.ERROR_SOURCE), error.message),
+        );
+      } else if (
+        hasErrorCode(error) &&
+        error.code === "ERR_BAD_REQUEST" &&
+        mutation.meta?.ERROR_SOURCE
+      ) {
+        toast.error(
+          formatErrorMessage(
+            String(mutation.meta.ERROR_SOURCE),
+            "Bad request",
+          ),
+        );
       }
     },
     onSuccess: (
@@ -121,7 +119,7 @@ export const queryClient = new QueryClient({
       mutation: Mutation<unknown, unknown, unknown, unknown>,
     ): void => {
       if (mutation.meta?.SUCCESS_MESSAGE) {
-        // toast.success(`${mutation.meta.SUCCESS_MESSAGE}`);
+        toast.success(String(mutation.meta.SUCCESS_MESSAGE));
       }
     },
   }),

@@ -1,14 +1,13 @@
-import type {
-  RoleEntity,
-  GetRolesParams,
-  PaginatedResult,
-} from "../entities/role.entity";
+import type { GetPaginatedParams } from "@/shared/types";
+import type { PaginatedResult, RoleEntity } from "../entities/role.entity";
 
 export const getRoles = async (
   repo: {
-    getRoles: (params: GetRolesParams) => Promise<PaginatedResult<RoleEntity>>;
+    getRoles: (
+      params: GetPaginatedParams,
+    ) => Promise<PaginatedResult<RoleEntity>>;
   },
-  params: GetRolesParams,
+  params: GetPaginatedParams,
 ) => {
   return repo.getRoles(params);
 };

@@ -58,6 +58,13 @@ class StorageService(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def bulk_delete_folder_prefixes(
+        self,
+        folder_paths: list[str],
+    ) -> dict[str, int | list]:
+        raise NotImplementedError
+
+    @abstractmethod
     def rename_folder_prefix(
         self,
         current_path: str,
@@ -236,6 +243,77 @@ class MinioStorageService(StorageService):
             "prefix": prefix,
             "bucket": self.settings.minio_bucket,
             "deleted_objects": len(object_names),
+        }
+
+    def bulk_delete_folder_prefixes(
+        self,
+        folder_paths: list[str],
+    ) -> dict[str, int | list]:
+        results: list[dict[str, str | int | bool | None]] = []
+        succeeded = 0
+
+        for folder_path in folder_paths:
+            candidate_path = folder_path.strip()
+
+            try:
+                result = self.delete_folder_prefix(candidate_path)
+            except InvalidStoragePathError as exc:
+                results.append(
+                    {
+                        "folder_path": candidate_path,
+                        "success": False,
+                        "status_code": 400,
+                        "error": str(exc),
+                    }
+                )
+                continue
+            except FolderNotFoundError as exc:
+                results.append(
+                    {
+                        "folder_path": candidate_path,
+                        "success": False,
+                        "status_code": 404,
+                        "error": str(exc),
+                    }
+                )
+                continue
+            except StorageConnectionError as exc:
+                results.append(
+                    {
+                        "folder_path": candidate_path,
+                        "success": False,
+                        "status_code": 503,
+                        "error": str(exc),
+                    }
+                )
+                continue
+            except StorageUploadError as exc:
+                results.append(
+                    {
+                        "folder_path": candidate_path,
+                        "success": False,
+                        "status_code": 500,
+                        "error": str(exc),
+                    }
+                )
+                continue
+
+            succeeded += 1
+            results.append(
+                {
+                    "folder_path": result["folder_path"],
+                    "success": True,
+                    "prefix": result["prefix"],
+                    "bucket": result["bucket"],
+                    "deleted_objects": result["deleted_objects"],
+                }
+            )
+
+        return {
+            "total": len(results),
+            "succeeded": succeeded,
+            "failed": len(results) - succeeded,
+            "results": results,
         }
 
     def rename_folder_prefix(

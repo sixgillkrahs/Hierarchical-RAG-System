@@ -10,5 +10,9 @@ export const useDeleteRole = () => {
   return useMutation<DeleteRoleResponse, Error, string>({
     mutationFn: (id) => RolesApi.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ROLEKEY.all }),
+    meta: {
+      ERROR_SOURCE: "Xóa vai trò thất bại",
+      SUCCESS_MESSAGE: "Xóa vai trò thành công",
+    },
   });
 };

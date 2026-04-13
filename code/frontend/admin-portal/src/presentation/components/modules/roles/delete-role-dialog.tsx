@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../ui/alert-dialog";
-import { useDeleteRole } from "@/presentation/hooks/useDeleteRole";
+import { useDeleteRole } from "@/presentation/hooks/roles/useDeleteRole";
 
 type DeleteRoleDialogProps = {
   roleId: string;
@@ -39,9 +39,12 @@ const DeleteRoleDialog = memo(({ roleId, roleName }: DeleteRoleDialogProps) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          className="text-destructive hover:bg-destructive/10"
+        >
           <Trash2 className="size-4" />
-          Xóa
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent size="sm">

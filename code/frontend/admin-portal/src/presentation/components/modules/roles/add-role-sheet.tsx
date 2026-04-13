@@ -24,7 +24,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../ui/sheet";
-import { useCreateRole } from "@/presentation/hooks/useCreateRole";
+import { useCreateRole } from "@/presentation/hooks/roles/useCreateRole";
 import { usePermissions } from "@/presentation/hooks/usePermissions";
 
 type AddRoleSheetProps = Record<string, never>;
@@ -38,7 +38,8 @@ const formSchema = z.object({
 const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
   const [open, setOpen] = useState(false);
   const { mutateAsync: createRole, isPending } = useCreateRole();
-  const { data: allPermissions = [], isLoading: permissionsLoading } = usePermissions();
+  const { data: allPermissions = [], isLoading: permissionsLoading } =
+    usePermissions();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -95,7 +96,10 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex h-full flex-col"
+          >
             <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
               <FormField
                 control={form.control}
@@ -117,7 +121,10 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
                   <FormItem>
                     <FormLabel>Mô tả</FormLabel>
                     <FormControl>
-                      <Input placeholder="Chức năng và phạm vi của vai trò..." {...field} />
+                      <Input
+                        placeholder="Chức năng và phạm vi của vai trò..."
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -130,7 +137,9 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
                   Quyền hạn
                 </p>
                 {permissionsLoading ? (
-                  <p className="text-sm text-muted-foreground">Đang tải quyền...</p>
+                  <p className="text-sm text-muted-foreground">
+                    Đang tải quyền...
+                  </p>
                 ) : allPermissions.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Không có quyền nào trong hệ thống.

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { KeyRound, LogOut, ShieldCheck, UserCog } from "lucide-react";
+import { FileArchive, KeyRound, LogOut, ShieldCheck, UserCog } from "lucide-react";
 import { startTransition, type ReactNode, useState } from "react";
 import { toast } from "sonner";
 
@@ -53,6 +53,15 @@ function MainLayout({ children }: MainLayoutProps) {
       icon: KeyRound,
     },
   ] as const;
+
+  const fileItems = [
+    {
+      to: "/files",
+      label: "Quản lý tệp",
+      icon: FileArchive,
+    },
+  ] as const;
+
   const visibleNavigationItems = navigationItems.filter((item) =>
     hasRouteAccess(session?.routes, item.to),
   );
@@ -66,7 +75,9 @@ function MainLayout({ children }: MainLayoutProps) {
           ? "Quản lý vai trò"
           : pathname.startsWith("/permissions")
             ? "Quản lý quyền"
-            : "Cổng nội bộ";
+            : pathname.startsWith("/files")
+              ? "Quản lý tệp"
+              : "Cổng nội bộ";
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -99,6 +110,37 @@ function MainLayout({ children }: MainLayoutProps) {
       <SidebarProvider defaultOpen>
         <Sidebar variant="inset" collapsible="icon">
           <SidebarContent>
+            {/* Group 1: Quản lý tệp */}
+            <SidebarGroup>
+              <SidebarGroupLabel>Quản lý tệp</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {fileItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive =
+                      pathname === item.to ||
+                      pathname.startsWith(`${item.to}/`);
+                    return (
+                      <SidebarMenuItem key={item.to}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          tooltip={item.label}
+                          size="lg"
+                        >
+                          <Link to={item.to}>
+                            <Icon />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Group 2: Quản trị hệ thống */}
             <SidebarGroup>
               <SidebarGroupLabel>Quản trị hệ thống</SidebarGroupLabel>
               <SidebarGroupContent>
@@ -108,7 +150,6 @@ function MainLayout({ children }: MainLayoutProps) {
                     const isActive =
                       pathname === item.to ||
                       pathname.startsWith(`${item.to}/`);
-
                     return (
                       <SidebarMenuItem key={item.to}>
                         <SidebarMenuButton

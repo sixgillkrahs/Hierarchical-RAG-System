@@ -102,9 +102,8 @@ const EditRoleSheet = memo(({ role }: EditRoleSheetProps) => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button size="icon-sm" variant="ghost" className="text-muted-foreground">
           <Pencil className="size-4" />
-          Chỉnh sửa
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md">

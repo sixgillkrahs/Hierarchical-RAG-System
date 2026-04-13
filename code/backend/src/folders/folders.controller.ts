@@ -21,7 +21,9 @@ import {
 import { RequirePermissions } from '../common/auth/decorators/require-permissions.decorator';
 import { CreateFolderDto } from './dto/create-folder.dto';
 import { DeleteFolderDto } from './dto/delete-folder.dto';
+import { DeleteFoldersDto } from './dto/delete-folders.dto';
 import {
+  FolderBulkDeleteResponseDto,
   FolderCreateResponseDto,
   FolderDeleteResponseDto,
   FolderListResponseDto,
@@ -69,6 +71,21 @@ export class FoldersController {
     @Body() payload: CreateFolderDto,
   ): Promise<FolderCreateResponseDto> {
     return this.foldersService.createFolder(payload);
+  }
+
+  @Post('bulk-delete')
+  @Version('1')
+  @RequirePermissions('storage.manage')
+  @ApiOperation({ summary: 'Delete multiple folder prefixes through the AI backend' })
+  @ApiBody({ type: DeleteFoldersDto })
+  @ApiOkResponse({
+    description: 'Folder prefixes deleted with per-item status.',
+    type: FolderBulkDeleteResponseDto,
+  })
+  bulkDelete(
+    @Body() payload: DeleteFoldersDto,
+  ): Promise<FolderBulkDeleteResponseDto> {
+    return this.foldersService.deleteFolders(payload);
   }
 
   @Delete()

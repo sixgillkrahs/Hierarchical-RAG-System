@@ -16,6 +16,7 @@ import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as MainUsersRouteImport } from './routes/_main/users'
 import { Route as MainRolesRouteImport } from './routes/_main/roles'
 import { Route as MainPermissionsRouteImport } from './routes/_main/permissions'
+import { Route as MainFilesRouteImport } from './routes/_main/files'
 import { Route as MainAboutRouteImport } from './routes/_main/about'
 
 const AuthRoute = AuthRouteImport.update({
@@ -52,6 +53,11 @@ const MainPermissionsRoute = MainPermissionsRouteImport.update({
   path: '/permissions',
   getParentRoute: () => MainRoute,
 } as any)
+const MainFilesRoute = MainFilesRouteImport.update({
+  id: '/files',
+  path: '/files',
+  getParentRoute: () => MainRoute,
+} as any)
 const MainAboutRoute = MainAboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -62,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/about': typeof MainAboutRoute
+  '/files': typeof MainFilesRoute
   '/permissions': typeof MainPermissionsRoute
   '/roles': typeof MainRolesRoute
   '/users': typeof MainUsersRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/about': typeof MainAboutRoute
+  '/files': typeof MainFilesRoute
   '/permissions': typeof MainPermissionsRoute
   '/roles': typeof MainRolesRoute
   '/users': typeof MainUsersRoute
@@ -81,6 +89,7 @@ export interface FileRoutesById {
   '/_main': typeof MainRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/_main/about': typeof MainAboutRoute
+  '/_main/files': typeof MainFilesRoute
   '/_main/permissions': typeof MainPermissionsRoute
   '/_main/roles': typeof MainRolesRoute
   '/_main/users': typeof MainUsersRoute
@@ -93,6 +102,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/about'
+    | '/files'
     | '/permissions'
     | '/roles'
     | '/users'
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
   to:
     | '/auth'
     | '/about'
+    | '/files'
     | '/permissions'
     | '/roles'
     | '/users'
@@ -111,6 +122,7 @@ export interface FileRouteTypes {
     | '/_main'
     | '/auth'
     | '/_main/about'
+    | '/_main/files'
     | '/_main/permissions'
     | '/_main/roles'
     | '/_main/users'
@@ -174,6 +186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainPermissionsRouteImport
       parentRoute: typeof MainRoute
     }
+    '/_main/files': {
+      id: '/_main/files'
+      path: '/files'
+      fullPath: '/files'
+      preLoaderRoute: typeof MainFilesRouteImport
+      parentRoute: typeof MainRoute
+    }
     '/_main/about': {
       id: '/_main/about'
       path: '/about'
@@ -186,6 +205,7 @@ declare module '@tanstack/react-router' {
 
 interface MainRouteChildren {
   MainAboutRoute: typeof MainAboutRoute
+  MainFilesRoute: typeof MainFilesRoute
   MainPermissionsRoute: typeof MainPermissionsRoute
   MainRolesRoute: typeof MainRolesRoute
   MainUsersRoute: typeof MainUsersRoute
@@ -194,6 +214,7 @@ interface MainRouteChildren {
 
 const MainRouteChildren: MainRouteChildren = {
   MainAboutRoute: MainAboutRoute,
+  MainFilesRoute: MainFilesRoute,
   MainPermissionsRoute: MainPermissionsRoute,
   MainRolesRoute: MainRolesRoute,
   MainUsersRoute: MainUsersRoute,

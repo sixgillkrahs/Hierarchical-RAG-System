@@ -3,6 +3,8 @@ from fastapi.concurrency import run_in_threadpool
 
 from app.dependencies.storage import get_storage_service
 from app.schemas.folders import (
+    FolderBulkDeleteRequest,
+    FolderBulkDeleteResponse,
     FolderCreateRequest,
     FolderCreateResponse,
     FolderDeleteRequest,
@@ -133,6 +135,24 @@ async def delete_folder(
         ) from exc
 
     return FolderDeleteResponse.model_validate(result)
+
+
+@router.post(
+    "/bulk-delete",
+    response_model=FolderBulkDeleteResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Delete multiple folder prefixes recursively from MinIO",
+)
+async def bulk_delete_folders(
+    payload: FolderBulkDeleteRequest,
+    storage_service: StorageService = Depends(get_storage_service),
+) -> FolderBulkDeleteResponse:
+    result = await run_in_threadpool(
+        storage_service.bulk_delete_folder_prefixes,
+        payload.folder_paths,
+    )
+
+    return FolderBulkDeleteResponse.model_validate(result)
 
 
 @router.patch(

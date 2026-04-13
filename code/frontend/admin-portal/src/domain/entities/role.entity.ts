@@ -16,11 +16,6 @@ export type PaginatedResult<T> = {
   totalPages: number;
 };
 
-export type GetRolesParams = {
-  page?: number;
-  limit?: number;
-};
-
 export type CreateRolePayload = {
   name: string;
   description: string;
