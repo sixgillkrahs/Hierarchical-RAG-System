@@ -5,7 +5,15 @@ const normalizeRoute = (route: string) => {
     return "/";
   }
 
-  return trimmedRoute.endsWith("/") ? trimmedRoute.slice(0, -1) : trimmedRoute;
+  const normalizedRoute = trimmedRoute.endsWith("/")
+    ? trimmedRoute.slice(0, -1)
+    : trimmedRoute;
+
+  if (normalizedRoute === "/storage") {
+    return "/files";
+  }
+
+  return normalizedRoute;
 };
 
 export const hasRouteAccess = (routes: string[] | undefined, targetRoute: string) => {

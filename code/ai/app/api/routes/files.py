@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 
 from app.dependencies.storage import get_storage_service
@@ -22,10 +22,15 @@ router = APIRouter(prefix="/files", tags=["files"])
 )
 async def upload_file(
     file: UploadFile = File(...),
+    folder_path: str | None = Form(default=None),
     storage_service: StorageService = Depends(get_storage_service),
 ) -> FileUploadResponse:
     try:
-        result = await run_in_threadpool(storage_service.upload_file, file)
+        result = await run_in_threadpool(
+            storage_service.upload_file,
+            file,
+            folder_path or "",
+        )
     except EmptyUploadError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

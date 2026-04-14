@@ -61,6 +61,11 @@ export function validateEnvironment(config: RawEnvironment): RawEnvironment {
     86_400_000,
     'AUTH_COOKIE_MAX_AGE_MS',
   );
+  const authRefreshCookieMaxAgeMs = parseNumber(
+    config.AUTH_REFRESH_COOKIE_MAX_AGE_MS,
+    604_800_000,
+    'AUTH_REFRESH_COOKIE_MAX_AGE_MS',
+  );
   const ragDefaultTopK = parseNumber(
     config.RAG_DEFAULT_TOP_K,
     5,
@@ -89,6 +94,10 @@ export function validateEnvironment(config: RawEnvironment): RawEnvironment {
     throw new Error('AUTH_COOKIE_MAX_AGE_MS must be greater than 0.');
   }
 
+  if (authRefreshCookieMaxAgeMs <= 0) {
+    throw new Error('AUTH_REFRESH_COOKIE_MAX_AGE_MS must be greater than 0.');
+  }
+
   if (ragDefaultTopK <= 0) {
     throw new Error('RAG_DEFAULT_TOP_K must be greater than 0.');
   }
@@ -102,8 +111,18 @@ export function validateEnvironment(config: RawEnvironment): RawEnvironment {
   }
 
   const jwtSecret = parseString(config.JWT_SECRET, 'change-this-in-development');
+  const jwtRefreshSecret = parseString(
+    config.JWT_REFRESH_SECRET,
+    'change-this-refresh-secret-in-development',
+  );
   if (nodeEnv === 'production' && jwtSecret === 'change-this-in-development') {
     throw new Error('JWT_SECRET must be set explicitly in production.');
+  }
+  if (
+    nodeEnv === 'production' &&
+    jwtRefreshSecret === 'change-this-refresh-secret-in-development'
+  ) {
+    throw new Error('JWT_REFRESH_SECRET must be set explicitly in production.');
   }
 
   return {
@@ -127,11 +146,18 @@ export function validateEnvironment(config: RawEnvironment): RawEnvironment {
     DB_SSL: parseBoolean(config.DB_SSL, false),
     JWT_SECRET: jwtSecret,
     JWT_EXPIRES_IN: parseString(config.JWT_EXPIRES_IN, '1d'),
+    JWT_REFRESH_SECRET: jwtRefreshSecret,
+    JWT_REFRESH_EXPIRES_IN: parseString(config.JWT_REFRESH_EXPIRES_IN, '7d'),
     AUTH_COOKIE_NAME: parseString(config.AUTH_COOKIE_NAME, 'access_token'),
+    AUTH_REFRESH_COOKIE_NAME: parseString(
+      config.AUTH_REFRESH_COOKIE_NAME,
+      'refresh_token',
+    ),
     AUTH_COOKIE_SECURE: parseBoolean(config.AUTH_COOKIE_SECURE, false),
     AUTH_COOKIE_SAME_SITE: parseString(config.AUTH_COOKIE_SAME_SITE, 'lax'),
     AUTH_COOKIE_DOMAIN: parseString(config.AUTH_COOKIE_DOMAIN, ''),
     AUTH_COOKIE_MAX_AGE_MS: authCookieMaxAgeMs,
+    AUTH_REFRESH_COOKIE_MAX_AGE_MS: authRefreshCookieMaxAgeMs,
     ADMIN_EMAIL: parseString(config.ADMIN_EMAIL, 'admin@gmail.com').toLowerCase(),
     ADMIN_PASSWORD: parseString(config.ADMIN_PASSWORD, '123456aA@'),
     ADMIN_DISPLAY_NAME: parseString(
@@ -139,6 +165,10 @@ export function validateEnvironment(config: RawEnvironment): RawEnvironment {
       'System Administrator',
     ),
     PYTHON_API_BASE_URL: parseString(config.PYTHON_API_BASE_URL, 'http://127.0.0.1:8000'),
+    PYTHON_FILES_UPLOAD_PATH: parseString(
+      config.PYTHON_FILES_UPLOAD_PATH,
+      '/files/upload',
+    ),
     PYTHON_API_TIMEOUT_MS: pythonApiTimeoutMs,
     STORAGE_CACHE_TTL_MS: storageCacheTtlMs,
     RAG_DEFAULT_TOP_K: ragDefaultTopK,

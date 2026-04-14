@@ -37,7 +37,7 @@ export class PermissionsGuard {
       .getRequest<{ user?: AuthenticatedUser }>();
     const grantedPermissions = new Set(request.user?.permissions ?? []);
     const hasAccess = requiredPermissions.every((permission) =>
-      grantedPermissions.has(permission),
+      this.hasPermission(grantedPermissions, permission),
     );
 
     if (!hasAccess) {
@@ -47,5 +47,21 @@ export class PermissionsGuard {
     }
 
     return true;
+  }
+
+  private hasPermission(
+    grantedPermissions: Set<string>,
+    requiredPermission: string,
+  ): boolean {
+    if (grantedPermissions.has(requiredPermission)) {
+      return true;
+    }
+
+    if (requiredPermission.endsWith('.read')) {
+      const managePermission = `${requiredPermission.slice(0, -'.read'.length)}.manage`;
+      return grantedPermissions.has(managePermission);
+    }
+
+    return false;
   }
 }

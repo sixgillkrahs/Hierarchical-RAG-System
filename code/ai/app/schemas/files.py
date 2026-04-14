@@ -8,3 +8,4 @@ class FileUploadResponse(BaseModel):
     content_type: str
     size: int
     url: str
+    folder_path: str = ""

@@ -42,7 +42,11 @@ class FolderConflictError(StorageError):
 
 class StorageService(ABC):
     @abstractmethod
-    def upload_file(self, file: UploadFile) -> dict[str, str | int]:
+    def upload_file(
+        self,
+        file: UploadFile,
+        folder_path: str = "",
+    ) -> dict[str, str | int]:
         raise NotImplementedError
 
     @abstractmethod
@@ -387,11 +391,24 @@ class MinioStorageService(StorageService):
             "moved_objects": moved_count,
         }
 
-    def upload_file(self, file: UploadFile) -> dict[str, str | int]:
+    def upload_file(
+        self,
+        file: UploadFile,
+        folder_path: str = "",
+    ) -> dict[str, str | int]:
         self.ensure_bucket_exists()
 
         original_name = Path(file.filename or "upload.bin").name
+        normalized_folder_path = self._normalize_folder_path(
+            folder_path,
+            allow_empty=True,
+        )
         object_name = f"{uuid4()}-{original_name}"
+        object_path = (
+            f"{normalized_folder_path}/{object_name}"
+            if normalized_folder_path
+            else object_name
+        )
         content_type = file.content_type or "application/octet-stream"
 
         file.file.seek(0, 2)
@@ -404,7 +421,7 @@ class MinioStorageService(StorageService):
         try:
             self.client.put_object(
                 bucket_name=self.settings.minio_bucket,
-                object_name=object_name,
+                object_name=object_path,
                 data=file.file,
                 length=file_size,
                 content_type=content_type,
@@ -418,12 +435,13 @@ class MinioStorageService(StorageService):
 
         return {
             "filename": original_name,
-            "object_name": object_name,
+            "folder_path": normalized_folder_path,
+            "object_name": object_path,
             "bucket": self.settings.minio_bucket,
             "content_type": content_type,
             "size": file_size,
             "url": (
                 f"{self.settings.minio_public_base_url}/"
-                f"{self.settings.minio_bucket}/{object_name}"
+                f"{self.settings.minio_bucket}/{object_path}"
             ),
         }

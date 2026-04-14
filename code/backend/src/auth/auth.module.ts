@@ -11,6 +11,7 @@ import { PermissionsGuard } from '../common/auth/guards/permissions.guard';
 import { Permission } from '../permissions/entities/permission.entity';
 import { Role } from '../roles/entities/role.entity';
 import { User } from '../users/entities/user.entity';
+import { AuthTokenService } from './auth-token.service';
 import { GetCurrentUserHandler } from './application/handlers/get-current-user.handler';
 import { LoginHandler } from './application/handlers/login.handler';
 import { AUTH_USER_REPOSITORY } from './domain/auth-user.repository';
@@ -42,6 +43,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   providers: [
     LoginHandler,
     GetCurrentUserHandler,
+    AuthTokenService,
     JwtStrategy,
     RbacSeedService,
     TypeOrmAuthUserRepository,

@@ -12,6 +12,14 @@ export const Route = createFileRoute("/_main/files")({
     if (!session) {
       throw redirect({ to: "/auth/sign-in" });
     }
+
+    const canAccessFiles =
+      session.permissions.includes("storage.read") ||
+      session.permissions.includes("storage.manage");
+
+    if (!canAccessFiles) {
+      throw redirect({ to: "/" });
+    }
   },
   component: RouteComponent,
 });

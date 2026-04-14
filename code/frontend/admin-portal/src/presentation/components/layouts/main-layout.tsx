@@ -39,17 +39,17 @@ function MainLayout({ children }: MainLayoutProps) {
   const navigationItems = [
     {
       to: "/users",
-      label: "Quản lý người dùng",
+      label: "Users",
       icon: UserCog,
     },
     {
       to: "/roles",
-      label: "Quản lý vai trò",
+      label: "Roles",
       icon: ShieldCheck,
     },
     {
       to: "/permissions",
-      label: "Quản lý quyền",
+      label: "Permissions",
       icon: KeyRound,
     },
   ] as const;
@@ -57,7 +57,7 @@ function MainLayout({ children }: MainLayoutProps) {
   const fileItems = [
     {
       to: "/files",
-      label: "Quản lý tệp",
+      label: "Files",
       icon: FileArchive,
     },
   ] as const;
@@ -65,19 +65,23 @@ function MainLayout({ children }: MainLayoutProps) {
   const visibleNavigationItems = navigationItems.filter((item) =>
     hasRouteAccess(session?.routes, item.to),
   );
+  const visibleFileItems = fileItems.filter(() =>
+    session?.permissions?.includes("storage.read") ||
+    session?.permissions?.includes("storage.manage"),
+  );
 
   const sectionLabel =
     pathname === "/"
-      ? "Tổng quan điểm truy cập"
+      ? "Access overview"
       : pathname.startsWith("/users")
-        ? "Quản lý người dùng"
+        ? "User management"
         : pathname.startsWith("/roles")
-          ? "Quản lý vai trò"
+          ? "Role management"
           : pathname.startsWith("/permissions")
-            ? "Quản lý quyền"
+            ? "Permission management"
             : pathname.startsWith("/files")
-              ? "Quản lý tệp"
-              : "Cổng nội bộ";
+              ? "Document storage"
+              : "Internal portal";
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -86,13 +90,13 @@ function MainLayout({ children }: MainLayoutProps) {
     try {
       const response = await AuthService.logout();
       didLogout = true;
-      toast.success("Đăng xuất thành công", {
+      toast.success("Signed out", {
         description: response.message,
       });
     } catch (error) {
-      toast.error("Đăng xuất thất bại", {
+      toast.error("Sign-out failed", {
         description:
-          error instanceof Error ? error.message : "Đã có lỗi xảy ra.",
+          error instanceof Error ? error.message : "An unexpected error occurred.",
       });
     } finally {
       setIsLoggingOut(false);
@@ -110,12 +114,11 @@ function MainLayout({ children }: MainLayoutProps) {
       <SidebarProvider defaultOpen>
         <Sidebar variant="inset" collapsible="icon">
           <SidebarContent>
-            {/* Group 1: Quản lý tệp */}
             <SidebarGroup>
-              <SidebarGroupLabel>Quản lý tệp</SidebarGroupLabel>
+              <SidebarGroupLabel>Storage</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {fileItems.map((item) => {
+                  {visibleFileItems.map((item) => {
                     const Icon = item.icon;
                     const isActive =
                       pathname === item.to ||
@@ -140,9 +143,8 @@ function MainLayout({ children }: MainLayoutProps) {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Group 2: Quản trị hệ thống */}
             <SidebarGroup>
-              <SidebarGroupLabel>Quản trị hệ thống</SidebarGroupLabel>
+              <SidebarGroupLabel>Administration</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {visibleNavigationItems.map((item) => {
@@ -180,7 +182,7 @@ function MainLayout({ children }: MainLayoutProps) {
               <SidebarTrigger />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-                  Cổng Quản Trị
+                  Admin Portal
                 </p>
                 <p className="text-sm font-medium text-foreground">
                   {sectionLabel}

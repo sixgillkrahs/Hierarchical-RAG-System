@@ -1,3 +1,57 @@
+# AGENTS.md
+
+## Repository expectations
+
+- This repository uses:
+  - NestJS for backend APIs
+  - PostgreSQL for relational persistence
+  - MinIO for object storage
+  - Next.js App Router for frontend
+  - shadcn/ui for UI primitives
+- Prefer targeted edits over broad refactors.
+- Keep implementation aligned with the existing folder structure, naming, and coding style.
+- Do not introduce new dependencies unless clearly justified by the task.
+- Preserve backward compatibility unless the task explicitly requests a breaking change.
+
+## Full-stack rules
+
+- When implementing a feature, trace the full path before editing:
+  1. Next.js route/page/component
+  2. client state, form, validation, and API calls
+  3. NestJS controller, DTO, guards, service, and repository
+  4. database schema / migration / query layer
+  5. MinIO upload/download lifecycle if files are involved
+  6. tests and docs affected
+- If an API contract changes, update frontend and backend in the same task.
+- Validate user input on both client and server when relevant.
+- For file upload flows:
+  - verify content type and size
+  - avoid trusting client-provided metadata
+  - store stable object keys
+  - keep DB metadata in sync with MinIO objects
+- For PostgreSQL changes:
+  - prefer additive migrations
+  - avoid destructive schema changes unless explicitly requested
+  - update seed/test data if needed
+- For shadcn/ui work:
+  - preserve design consistency
+  - handle loading, empty, success, and error states
+  - keep accessibility in mind
+
+## Validation expectations
+
+- Run the smallest relevant verification set after edits:
+  - lint
+  - typecheck
+  - targeted unit/integration tests
+  - build check when the change affects app wiring
+- Never claim something is tested unless it was actually run.
+- Final summaries must include:
+  - files changed
+  - why each change was needed
+  - what was validated
+  - risks / follow-ups
+
 # Hierarchical-RAG-System
 
 ## Purpose

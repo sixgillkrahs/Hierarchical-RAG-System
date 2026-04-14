@@ -6,7 +6,10 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
+import { Document } from '../documents/entities/document.entity';
 import type { CreateFolderDto } from './dto/create-folder.dto';
 import type { DeleteFolderDto } from './dto/delete-folder.dto';
 import type { DeleteFoldersDto } from './dto/delete-folders.dto';
@@ -32,7 +35,11 @@ export class FoldersService {
   private readonly pythonApiTimeoutMs: number;
   private readonly storageCacheTtlMs: number;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRepository(Document)
+    private readonly documentRepository: Repository<Document>,
+  ) {
     this.pythonApiBaseUrl =
       this.configService.get<string>('PYTHON_API_BASE_URL') ??
       'http://127.0.0.1:8000';
@@ -87,8 +94,10 @@ export class FoldersService {
   async deleteFolder(
     payload: DeleteFolderDto,
   ): Promise<FolderDeleteResponseDto> {
+    const normalizedFolderPath = this.normalizeFolderPath(payload.folder_path);
     const response = await this.deleteFolderRequest(payload);
 
+    await this.deleteDocumentMetadataForFolder(normalizedFolderPath);
     this.clearCache();
     return response;
   }
@@ -108,6 +117,12 @@ export class FoldersService {
     );
 
     if (response.succeeded > 0) {
+      const deletedFolderPaths = response.results
+        .filter((result) => result.success)
+        .map((result) => result.folder_path)
+        .map((folderPath) => this.normalizeFolderPath(folderPath));
+
+      await this.deleteDocumentMetadataForFolders(deletedFolderPaths);
       this.clearCache();
     }
 
@@ -117,6 +132,8 @@ export class FoldersService {
   async renameFolder(
     payload: RenameFolderDto,
   ): Promise<FolderRenameResponseDto> {
+    const oldPath = this.normalizeFolderPath(payload.current_path);
+    const newPath = this.normalizeFolderPath(payload.new_path);
     const response = await this.request<FolderRenameResponseDto>('/folders', {
       method: 'PATCH',
       headers: {
@@ -125,6 +142,7 @@ export class FoldersService {
       body: JSON.stringify(payload),
     });
 
+    await this.renameDocumentMetadata(oldPath, newPath);
     this.clearCache();
     return response;
   }
@@ -143,6 +161,100 @@ export class FoldersService {
       },
       body: JSON.stringify(payload),
     });
+  }
+
+  private normalizeFolderPath(folderPath: string): string {
+    const normalized = folderPath
+      .replace(/\\/g, '/')
+      .trim()
+      .replace(/^\/+|\/+$/g, '');
+
+    const segments = normalized
+      .split('/')
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    if (!segments.length) {
+      return '';
+    }
+
+    return segments.join('/');
+  }
+
+  private async deleteDocumentMetadataForFolder(folderPath: string): Promise<void> {
+    if (!folderPath) {
+      return;
+    }
+
+    await this.documentRepository
+      .createQueryBuilder()
+      .delete()
+      .from(Document)
+      .where('folder_path = :folderPath', {
+        folderPath,
+      })
+      .orWhere('folder_path LIKE :descendantPath', {
+        descendantPath: `${folderPath}/%`,
+      })
+      .execute();
+  }
+
+  private async deleteDocumentMetadataForFolders(
+    folderPaths: string[],
+  ): Promise<void> {
+    const uniqueFolderPaths = Array.from(
+      new Set(folderPaths.filter((folderPath) => folderPath.length > 0)),
+    );
+
+    for (const folderPath of uniqueFolderPaths) {
+      await this.deleteDocumentMetadataForFolder(folderPath);
+    }
+  }
+
+  private async renameDocumentMetadata(
+    oldPath: string,
+    newPath: string,
+  ): Promise<void> {
+    if (!oldPath || !newPath || oldPath === newPath) {
+      return;
+    }
+
+    const documents = await this.documentRepository
+      .createQueryBuilder('document')
+      .where('document.folderPath = :folderPath', {
+        folderPath: oldPath,
+      })
+      .orWhere('document.folderPath LIKE :descendantPath', {
+        descendantPath: `${oldPath}/%`,
+      })
+      .getMany();
+
+    if (documents.length === 0) {
+      return;
+    }
+
+    const oldPrefix = `${oldPath}/`;
+    const newPrefix = `${newPath}/`;
+
+    for (const document of documents) {
+      if (document.folderPath === oldPath) {
+        document.folderPath = newPath;
+      } else if (document.folderPath?.startsWith(oldPrefix)) {
+        document.folderPath = `${newPath}${document.folderPath.slice(oldPath.length)}`;
+      }
+
+      if (document.objectName.startsWith(oldPrefix)) {
+        document.objectName = `${newPrefix}${document.objectName.slice(oldPrefix.length)}`;
+      }
+
+      const oldBucketPath = `/${document.bucket}/${oldPrefix}`;
+      const newBucketPath = `/${document.bucket}/${newPrefix}`;
+      if (document.url.includes(oldBucketPath)) {
+        document.url = document.url.replace(oldBucketPath, newBucketPath);
+      }
+    }
+
+    await this.documentRepository.save(documents);
   }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {

@@ -25,6 +25,12 @@ export type LogoutResponse = {
   message: string;
 };
 
+export type RefreshResponse = {
+  success: boolean;
+  message: string;
+  user: AuthProfile;
+};
+
 const AuthService = {
   signIn: (payload: SignInPayload) =>
     request({
@@ -37,6 +43,11 @@ const AuthService = {
       url: "/auth/me",
       method: AxiosMethod.GET,
     }) as Promise<AuthProfile>,
+  refresh: () =>
+    request({
+      url: "/auth/refresh-token",
+      method: AxiosMethod.POST,
+    }) as Promise<RefreshResponse>,
   logout: () =>
     request({
       url: "/auth/logout",
