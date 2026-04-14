@@ -8,15 +8,17 @@ import { RenameFolderSheet } from "./rename-folder-sheet";
 import { TableCell, TableRow } from "../../../ui/table";
 
 type FolderTableRowProps = {
-  folder: FolderItem;
+  canManage: boolean;
   checked: boolean;
+  folder: FolderItem;
   setCurrentPath: Dispatch<SetStateAction<string>>;
   setSelected: Dispatch<SetStateAction<Set<string>>>;
 };
 
 export const FolderTableRow = memo(function FolderTableRow({
-  folder,
+  canManage,
   checked,
+  folder,
   setCurrentPath,
   setSelected,
 }: FolderTableRowProps) {
@@ -29,7 +31,8 @@ export const FolderTableRow = memo(function FolderTableRow({
           onChange={() => toggleFolderSelection(folder.path, setSelected)}
           onClick={(event) => event.stopPropagation()}
           className="size-4 cursor-pointer accent-primary"
-          aria-label={`Chọn ${folder.name}`}
+          aria-label={`Select ${folder.name}`}
+          disabled={!canManage}
         />
       </TableCell>
       <TableCell>
@@ -42,10 +45,14 @@ export const FolderTableRow = memo(function FolderTableRow({
         </button>
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex justify-end gap-1">
-          <RenameFolderSheet folder={folder} />
-          <DeleteFolderDialog folder={folder} />
-        </div>
+        {canManage ? (
+          <div className="flex justify-end gap-1">
+            <RenameFolderSheet folder={folder} />
+            <DeleteFolderDialog folder={folder} />
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground">Read only</span>
+        )}
       </TableCell>
     </TableRow>
   );

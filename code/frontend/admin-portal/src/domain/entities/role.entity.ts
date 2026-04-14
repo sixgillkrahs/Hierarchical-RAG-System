@@ -1,25 +1,40 @@
+import type { GetPaginatedParams } from "@/shared/types";
+
+export type StorageScopeCapability = "read" | "manage";
+
+export type StorageScope = {
+  capability: StorageScopeCapability;
+  id?: string;
+  inheritChildren: boolean;
+  pathPrefix: string;
+};
+
 export type RoleEntity = {
+  createdAt?: string;
+  description: string;
   id: string;
   name: string;
-  description: string;
   permissionIds: string[];
   permissions: string[];
-  createdAt?: string;
+  storageScopes: StorageScope[];
   updatedAt?: string;
 };
 
 export type PaginatedResult<T> = {
   data: T[];
-  total: number;
-  page: number;
   limit: number;
+  page: number;
+  total: number;
   totalPages: number;
 };
 
+export type GetRolesParams = GetPaginatedParams;
+
 export type CreateRolePayload = {
-  name: string;
   description: string;
+  name: string;
   permissionIds?: string[];
+  storageScopes?: StorageScope[];
 };
 
 export type CreateRoleResponse = {
@@ -28,10 +43,11 @@ export type CreateRoleResponse = {
 };
 
 export type UpdateRolePayload = {
+  description?: string;
   id: string;
   name?: string;
-  description?: string;
   permissionIds?: string[];
+  storageScopes?: StorageScope[];
 };
 
 export type UpdateRoleResponse = {

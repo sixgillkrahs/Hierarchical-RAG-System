@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { CommandHandler, type ICommandHandler } from '@nestjs/cqrs';
 
+import type { StorageScopeSummary } from '../../../common/auth/storage-scope.types';
 import {
   ROLE_REPOSITORY,
   type RoleRepository,
@@ -33,6 +34,10 @@ export class UpdateRoleHandler
       command.permissionIds !== undefined
         ? this.normalizePermissionIds(command.permissionIds)
         : undefined;
+    const storageScopes =
+      command.storageScopes !== undefined
+        ? this.normalizeStorageScopes(command.storageScopes)
+        : undefined;
 
     if (command.name !== undefined && !name) {
       throw new BadRequestException('Role name must not be empty.');
@@ -45,7 +50,8 @@ export class UpdateRoleHandler
     if (
       name === undefined &&
       description === undefined &&
-      permissionIds === undefined
+      permissionIds === undefined &&
+      storageScopes === undefined
     ) {
       throw new BadRequestException('At least one role field must be provided.');
     }
@@ -64,6 +70,7 @@ export class UpdateRoleHandler
         name,
         description,
         permissionIds,
+        storageScopes,
       });
 
       if (!updatedRole) {
@@ -95,5 +102,54 @@ export class UpdateRoleHandler
           .filter((permissionId) => permissionId.length > 0),
       ),
     );
+  }
+
+  private normalizeStorageScopes(
+    storageScopes: StorageScopeSummary[],
+  ): StorageScopeSummary[] {
+    return Array.from(
+      new Map(
+        storageScopes.map((storageScope) => {
+          const pathPrefix = this.normalizePathPrefix(storageScope.pathPrefix);
+          const capability = storageScope.capability;
+
+          if (capability !== 'read' && capability !== 'manage') {
+            throw new BadRequestException(
+              `Unsupported storage scope capability: ${capability}.`,
+            );
+          }
+
+          const normalizedScope = {
+            pathPrefix,
+            capability,
+            inheritChildren: storageScope.inheritChildren !== false,
+          } satisfies StorageScopeSummary;
+
+          return [
+            `${normalizedScope.pathPrefix}:${normalizedScope.capability}`,
+            normalizedScope,
+          ];
+        }),
+      ).values(),
+    );
+  }
+
+  private normalizePathPrefix(pathPrefix: string): string {
+    const normalized = pathPrefix
+      .replace(/\\/g, '/')
+      .trim()
+      .replace(/^\/+|\/+$/g, '');
+    const segments = normalized
+      .split('/')
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+
+    if (segments.some((segment) => segment === '.' || segment === '..')) {
+      throw new BadRequestException(
+        "Storage scope path cannot contain '.' or '..' segments.",
+      );
+    }
+
+    return segments.join('/');
   }
 }

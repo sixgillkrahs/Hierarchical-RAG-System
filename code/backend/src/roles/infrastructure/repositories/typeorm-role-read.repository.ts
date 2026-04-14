@@ -2,10 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
+import type { StorageScopeSummary } from '../../../common/auth/storage-scope.types';
 import { Permission } from '../../../permissions/entities/permission.entity';
-import type { RoleRepository, PaginatedResult } from '../../domain/role-read.repository';
+import type {
+  PaginatedResult,
+  RoleRepository,
+} from '../../domain/role-read.repository';
 import type { RoleSummary } from '../../domain/role-summary';
 import { Role } from '../../entities/role.entity';
+import { RoleStorageScope } from '../../entities/role-storage-scope.entity';
 
 @Injectable()
 export class TypeOrmRoleReadRepository implements RoleRepository {
@@ -14,12 +19,28 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(Permission)
     private readonly permissionRepository: Repository<Permission>,
+    @InjectRepository(RoleStorageScope)
+    private readonly roleStorageScopeRepository: Repository<RoleStorageScope>,
   ) {}
 
   private toSummary(role: Role): RoleSummary {
     const permissions = [...role.permissions].sort((a, b) =>
       a.code.localeCompare(b.code),
     );
+    const storageScopes = [...(role.storageScopes ?? [])]
+      .map((scope) => ({
+        id: scope.id,
+        pathPrefix: scope.pathPrefix,
+        capability: scope.capability,
+        inheritChildren: scope.inheritChildren,
+      }))
+      .sort((left, right) => {
+        if (left.pathPrefix === right.pathPrefix) {
+          return left.capability.localeCompare(right.capability);
+        }
+
+        return left.pathPrefix.localeCompare(right.pathPrefix);
+      });
 
     return {
       id: role.id,
@@ -27,6 +48,7 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
       description: role.description,
       permissionIds: permissions.map((permission) => permission.id),
       permissions: permissions.map((permission) => permission.code),
+      storageScopes,
     };
   }
 
@@ -35,6 +57,7 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
       where: { id },
       relations: {
         permissions: true,
+        storageScopes: true,
       },
     });
   }
@@ -55,6 +78,7 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
     description: string;
     name: string;
     permissionIds: string[];
+    storageScopes: StorageScopeSummary[];
   }): Promise<RoleSummary> {
     const permissions = await this.findPermissionsByIds(input.permissionIds);
     const role = this.roleRepository.create({
@@ -64,6 +88,7 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
     });
 
     const savedRole = await this.roleRepository.save(role);
+    await this.replaceStorageScopes(savedRole, input.storageScopes);
     const hydratedRole = await this.findRoleEntityById(savedRole.id);
 
     if (!hydratedRole) {
@@ -83,6 +108,7 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
     const roles = await this.roleRepository.find({
       relations: {
         permissions: true,
+        storageScopes: true,
       },
       order: {
         name: 'ASC',
@@ -97,7 +123,10 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
     limit: number,
   ): Promise<PaginatedResult<RoleSummary>> {
     const [roles, total] = await this.roleRepository.findAndCount({
-      relations: { permissions: true },
+      relations: {
+        permissions: true,
+        storageScopes: true,
+      },
       order: { name: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -118,6 +147,7 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
       description?: string;
       name?: string;
       permissionIds?: string[];
+      storageScopes?: StorageScopeSummary[];
     },
   ): Promise<RoleSummary | null> {
     const role = await this.findRoleEntityById(id);
@@ -139,6 +169,11 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
     }
 
     const savedRole = await this.roleRepository.save(role);
+
+    if (input.storageScopes !== undefined) {
+      await this.replaceStorageScopes(savedRole, input.storageScopes);
+    }
+
     const hydratedRole = await this.findRoleEntityById(savedRole.id);
 
     if (!hydratedRole) {
@@ -183,5 +218,27 @@ export class TypeOrmRoleReadRepository implements RoleRepository {
       },
     });
   }
-}
 
+  private async replaceStorageScopes(
+    role: Role,
+    storageScopes: StorageScopeSummary[],
+  ): Promise<void> {
+    await this.roleStorageScopeRepository.delete({ roleId: role.id });
+
+    if (storageScopes.length === 0) {
+      return;
+    }
+
+    const scopeEntities = storageScopes.map((scope) =>
+      this.roleStorageScopeRepository.create({
+        roleId: role.id,
+        role,
+        pathPrefix: scope.pathPrefix,
+        capability: scope.capability,
+        inheritChildren: scope.inheritChildren,
+      }),
+    );
+
+    await this.roleStorageScopeRepository.save(scopeEntities);
+  }
+}

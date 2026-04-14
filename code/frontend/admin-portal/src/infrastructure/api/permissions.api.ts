@@ -1,19 +1,22 @@
 import { AxiosMethod } from "@/infrastructure/lib/axios/method";
 import request from "@/infrastructure/lib/axios/request";
 import type {
-  PermissionEntity,
   CreatePermissionPayload,
   CreatePermissionResponse,
   UpdatePermissionPayload,
   UpdatePermissionResponse,
+  DeletePermissionResponse,
+  GetPermissionsParams,
+  PaginatedPermissions,
 } from "@/domain/entities/permission.entity";
 
 export const PermissionsApi = {
-  getAll: (): Promise<PermissionEntity[]> =>
+  getAll: (params?: GetPermissionsParams): Promise<PaginatedPermissions> =>
     request({
       url: "/permissions",
       method: AxiosMethod.GET,
-    }) as Promise<PermissionEntity[]>,
+      params,
+    }) as Promise<PaginatedPermissions>,
 
   create: (
     payload: CreatePermissionPayload,
@@ -33,4 +36,10 @@ export const PermissionsApi = {
       method: AxiosMethod.PATCH,
       data: payload,
     }) as Promise<UpdatePermissionResponse>,
+
+  delete: (id: string): Promise<DeletePermissionResponse> =>
+    request({
+      url: `/permissions/${id}`,
+      method: AxiosMethod.DELETE,
+    }) as Promise<DeletePermissionResponse>,
 };

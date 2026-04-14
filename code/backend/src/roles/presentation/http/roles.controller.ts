@@ -18,10 +18,13 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 
 import { RequirePermissions } from '../../../common/auth/decorators/require-permissions.decorator';
+import { FoldersService } from '../../../folders/folders.service';
+import { FolderListResponseDto } from '../../../folders/dto/folder.responses';
 import { CreateRoleCommand } from '../../application/commands/create-role.command';
 import { DeleteRoleCommand } from '../../application/commands/delete-role.command';
 import { UpdateRoleCommand } from '../../application/commands/update-role.command';
@@ -38,6 +41,7 @@ export class RolesController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    private readonly foldersService: FoldersService,
   ) {}
 
   @Get()
@@ -52,6 +56,28 @@ export class RolesController {
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 10,
   ) {
     return this.queryBus.execute(new GetRolesQuery(page, limit));
+  }
+
+  @Get('storage-scopes/folders')
+  @Version('1')
+  @RequirePermissions('roles.manage')
+  @ApiOperation({
+    summary: 'Browse folders for the role storage-scope picker',
+  })
+  @ApiQuery({
+    name: 'current_path',
+    required: false,
+    description: 'Current folder path. Leave empty to browse root folders.',
+    example: 'cto/contracts',
+  })
+  @ApiOkResponse({
+    description: 'Direct child folders returned for the role scope picker.',
+    type: FolderListResponseDto,
+  })
+  listStorageScopeFolders(
+    @Query('current_path') currentPath?: string,
+  ): Promise<FolderListResponseDto> {
+    return this.foldersService.listFoldersForScopePicker(currentPath ?? '');
   }
 
   @Get(':id')
@@ -83,6 +109,11 @@ export class RolesController {
         createRoleDto.name,
         createRoleDto.description,
         createRoleDto.permissionIds ?? [],
+        (createRoleDto.storageScopes ?? []).map((scope) => ({
+          pathPrefix: scope.pathPrefix?.trim() ?? '',
+          capability: scope.capability,
+          inheritChildren: scope.inheritChildren !== false,
+        })),
       ),
     );
 
@@ -114,6 +145,11 @@ export class RolesController {
         updateRoleDto.name,
         updateRoleDto.description,
         updateRoleDto.permissionIds,
+        updateRoleDto.storageScopes?.map((scope) => ({
+          pathPrefix: scope.pathPrefix?.trim() ?? '',
+          capability: scope.capability,
+          inheritChildren: scope.inheritChildren !== false,
+        })),
       ),
     );
 

@@ -1,12 +1,14 @@
+import type { StorageScope } from "@/domain/entities/role.entity";
 import { AxiosMethod } from "@/infrastructure/lib/axios/method";
 import request from "@/infrastructure/lib/axios/request";
 
 export type AuthProfile = {
-  id: string;
   email: string;
-  roles: string[];
+  id: string;
   permissions: string[];
+  roles: string[];
   routes: string[];
+  storageScopes: StorageScope[];
 };
 
 export type SignInPayload = {
@@ -15,19 +17,19 @@ export type SignInPayload = {
 };
 
 export type SignInResponse = {
-  success: boolean;
   message: string;
+  success: boolean;
   user: AuthProfile;
 };
 
 export type LogoutResponse = {
-  success: boolean;
   message: string;
+  success: boolean;
 };
 
 export type RefreshResponse = {
-  success: boolean;
   message: string;
+  success: boolean;
   user: AuthProfile;
 };
 

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import type { StorageScopeSummary } from '../../../common/auth/storage-scope.types';
 import { Role } from '../../../roles/entities/role.entity';
 import { User } from '../../../users/entities/user.entity';
 import type {
@@ -25,6 +26,7 @@ export class TypeOrmAuthUserRepository implements AuthUserRepository {
       relations: {
         roles: {
           permissions: true,
+          storageScopes: true,
         },
       },
     });
@@ -38,6 +40,7 @@ export class TypeOrmAuthUserRepository implements AuthUserRepository {
       relations: {
         roles: {
           permissions: true,
+          storageScopes: true,
         },
       },
     });
@@ -53,6 +56,7 @@ export class TypeOrmAuthUserRepository implements AuthUserRepository {
       roles: snapshot.roles,
       permissions: snapshot.permissions,
       routes: snapshot.routes,
+      storageScopes: snapshot.storageScopes,
     };
   }
 
@@ -74,6 +78,32 @@ export class TypeOrmAuthUserRepository implements AuthUserRepository {
         ),
       ),
     ).sort();
+    const storageScopes = Array.from(
+      new Map(
+        user.roles
+          .flatMap((role: Role) => role.storageScopes ?? [])
+          .map((scope) => {
+            const normalizedPathPrefix = scope.pathPrefix.trim();
+            const key = `${normalizedPathPrefix}:${scope.capability}:${scope.inheritChildren}`;
+
+            return [
+              key,
+              {
+                id: scope.id,
+                pathPrefix: normalizedPathPrefix,
+                capability: scope.capability,
+                inheritChildren: scope.inheritChildren,
+              } satisfies StorageScopeSummary,
+            ];
+          }),
+      ).values(),
+    ).sort((left, right) => {
+      if (left.pathPrefix === right.pathPrefix) {
+        return left.capability.localeCompare(right.capability);
+      }
+
+      return left.pathPrefix.localeCompare(right.pathPrefix);
+    });
 
     return {
       id: user.id,
@@ -83,6 +113,7 @@ export class TypeOrmAuthUserRepository implements AuthUserRepository {
       roles,
       permissions,
       routes,
+      storageScopes,
     };
   }
 }

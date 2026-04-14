@@ -59,8 +59,9 @@ export class DocumentsController {
   })
   findAll(
     @Query('current_path') currentPath?: string,
+    @CurrentUser() user?: AuthenticatedUser,
   ): Promise<DocumentListResponseDto> {
-    return this.documentsService.listDocuments(currentPath ?? '');
+    return this.documentsService.listDocuments(currentPath ?? '', user);
   }
 
   @Post('upload')

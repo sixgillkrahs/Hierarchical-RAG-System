@@ -1,6 +1,7 @@
 import {
   BadGatewayException,
   BadRequestException,
+  ForbiddenException,
   HttpException,
   Injectable,
   Logger,
@@ -10,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { StorageScopeService } from '../common/auth/storage-scope.service';
 import type { AuthenticatedUser } from '../common/auth/interfaces/authenticated-user.interface';
 import { Document } from './entities/document.entity';
 import type {
@@ -43,6 +45,7 @@ export class DocumentsService {
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly storageScopeService: StorageScopeService,
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
   ) {
@@ -56,8 +59,27 @@ export class DocumentsService {
       '/files/upload';
   }
 
-  async listDocuments(currentPath = ''): Promise<DocumentListResponseDto> {
+  async listDocuments(
+    currentPath = '',
+    user?: AuthenticatedUser,
+  ): Promise<DocumentListResponseDto> {
     const normalizedPath = this.normalizeFolderPath(currentPath, true);
+    const scopes = user
+      ? await this.storageScopeService.getEffectiveScopes(user.userId)
+      : [];
+
+    if (normalizedPath.length > 0) {
+      this.storageScopeService.assertCanTraversePath(normalizedPath, scopes);
+    }
+
+    if (!this.storageScopeService.canReadPath(normalizedPath, scopes)) {
+      return {
+        current_path: normalizedPath,
+        total: 0,
+        documents: [],
+      };
+    }
+
     const queryBuilder = this.documentRepository
       .createQueryBuilder('document')
       .orderBy('document.createdAt', 'DESC');
@@ -98,6 +120,12 @@ export class DocumentsService {
     }
 
     const normalizedFolderPath = this.normalizeFolderPath(folderPath ?? '', true);
+    if (!user) {
+      throw new ForbiddenException('Authentication required.');
+    }
+
+    const scopes = await this.storageScopeService.getEffectiveScopes(user.userId);
+    this.storageScopeService.assertCanManagePath(normalizedFolderPath, scopes);
     const uploadResult = await this.uploadToPythonApi(file, normalizedFolderPath);
 
     const persistedFolderPath =

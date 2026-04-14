@@ -6,6 +6,7 @@ import type {
   UpdateRolePayload,
   UpdateRoleResponse,
 } from "@/domain/entities/role.entity";
+import type { FolderListResponse } from "@/domain/entities/folder.entity";
 import { AxiosMethod } from "@/infrastructure/lib/axios/method";
 import request from "@/infrastructure/lib/axios/request";
 import type { GetPaginatedParams } from "@/shared/types";
@@ -19,6 +20,13 @@ export const RolesApi = {
       method: AxiosMethod.GET,
       params,
     }) as Promise<PaginatedResult<RoleEntity>>,
+
+  listStorageScopeFolders: (currentPath?: string): Promise<FolderListResponse> =>
+    request({
+      url: "/roles/storage-scopes/folders",
+      method: AxiosMethod.GET,
+      params: currentPath ? { current_path: currentPath } : undefined,
+    }) as Promise<FolderListResponse>,
 
   create: (payload: CreateRolePayload): Promise<CreateRoleResponse> =>
     request({

@@ -4,12 +4,14 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { Permission } from '../../permissions/entities/permission.entity';
 import { User } from '../../users/entities/user.entity';
+import { RoleStorageScope } from './role-storage-scope.entity';
 
 @Entity({ name: 'roles' })
 export class Role {
@@ -39,10 +41,12 @@ export class Role {
   @ManyToMany(() => User, (user) => user.roles)
   users!: User[];
 
+  @OneToMany(() => RoleStorageScope, (storageScope) => storageScope.role)
+  storageScopes!: RoleStorageScope[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
-

@@ -1,3 +1,4 @@
+import type { StorageScopeSummary } from '../../common/auth/storage-scope.types';
 import type { AuthProfile } from './auth-profile';
 
 export type AuthUserSnapshot = {
@@ -8,6 +9,7 @@ export type AuthUserSnapshot = {
   permissions: string[];
   roles: string[];
   routes: string[];
+  storageScopes: StorageScopeSummary[];
 };
 
 export const AUTH_USER_REPOSITORY = Symbol('AUTH_USER_REPOSITORY');

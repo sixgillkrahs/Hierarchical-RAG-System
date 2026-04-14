@@ -2,9 +2,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { memo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { toast } from "sonner";
+import { z } from "zod";
 
+import { usePermissions } from "@/presentation/hooks/usePermissions";
+import { useCreateRole } from "@/presentation/hooks/roles/useCreateRole";
 import { Button } from "../../ui/button";
 import {
   Form,
@@ -24,15 +26,21 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../ui/sheet";
-import { useCreateRole } from "@/presentation/hooks/roles/useCreateRole";
-import { usePermissions } from "@/presentation/hooks/usePermissions";
+import { StorageScopeEditor } from "./storage-scope-editor";
 
 type AddRoleSheetProps = Record<string, never>;
 
+const storageScopeSchema = z.object({
+  pathPrefix: z.string(),
+  capability: z.enum(["read", "manage"]),
+  inheritChildren: z.boolean(),
+});
+
 const formSchema = z.object({
-  name: z.string().min(2, "Tên vai trò phải có ít nhất 2 ký tự"),
-  description: z.string().min(5, "Mô tả phải có ít nhất 5 ký tự"),
+  name: z.string().min(2, "Role name must be at least 2 characters."),
+  description: z.string().min(5, "Description must be at least 5 characters."),
   permissionIds: z.array(z.string()),
+  storageScopes: z.array(storageScopeSchema),
 });
 
 const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
@@ -43,7 +51,12 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", description: "", permissionIds: [] },
+    defaultValues: {
+      name: "",
+      description: "",
+      permissionIds: [],
+      storageScopes: [],
+    },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -52,32 +65,37 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
         name: values.name,
         description: values.description,
         permissionIds: values.permissionIds,
+        storageScopes: values.storageScopes,
       });
 
-      // Cache auto-refreshed via invalidation in useCreateRole
-      toast.success(response.message || "Đã thêm vai trò thành công");
+      toast.success(response.message || "Role created successfully.");
       form.reset();
       setOpen(false);
     } catch (error: any) {
-      toast.error("Thêm vai trò thất bại", {
-        description: error?.message || "Đã có lỗi xảy ra trên server.",
+      toast.error("Could not create role", {
+        description: error?.message || "The server returned an unexpected error.",
       });
     }
   };
 
-  const togglePermission = (permId: string) => {
+  const togglePermission = (permissionId: string) => {
     const current = form.getValues("permissionIds");
-    const updated = current.includes(permId)
-      ? current.filter((id) => id !== permId)
-      : [...current, permId];
-    form.setValue("permissionIds", updated, { shouldDirty: true });
+    const next = current.includes(permissionId)
+      ? current.filter((id) => id !== permissionId)
+      : [...current, permissionId];
+
+    form.setValue("permissionIds", next, { shouldDirty: true });
   };
 
   const selectedIds = form.watch("permissionIds");
+  const storageScopes = form.watch("storageScopes");
 
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    if (!newOpen) form.reset();
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+
+    if (!nextOpen) {
+      form.reset();
+    }
   };
 
   return (
@@ -85,14 +103,14 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
       <SheetTrigger asChild>
         <Button className="sm:self-auto">
           <Plus className="size-4" />
-          Thêm vai trò
+          Add role
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>Thêm vai trò mới</SheetTitle>
+          <SheetTitle>Create role</SheetTitle>
           <SheetDescription>
-            Tạo vai trò mới và gán quyền cho vai trò ngay khi tạo.
+            Set the base permissions and storage subtree access in one step.
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
@@ -106,23 +124,24 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tên vai trò</FormLabel>
+                    <FormLabel>Role name</FormLabel>
                     <FormControl>
-                      <Input placeholder="VD: content_editor" {...field} />
+                      <Input placeholder="cto" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mô tả</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Chức năng và phạm vi của vai trò..."
+                        placeholder="Explain the responsibilities of this role."
                         {...field}
                       />
                     </FormControl>
@@ -131,41 +150,39 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
                 )}
               />
 
-              {/* Permissions multi-select */}
-              <div>
-                <p className="mb-3 text-sm font-medium leading-none">
-                  Quyền hạn
-                </p>
+              <div className="space-y-3">
+                <p className="text-sm font-medium leading-none">Permissions</p>
                 {permissionsLoading ? (
                   <p className="text-sm text-muted-foreground">
-                    Đang tải quyền...
+                    Loading permissions...
                   </p>
                 ) : allPermissions.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Không có quyền nào trong hệ thống.
+                    No permissions are available yet.
                   </p>
                 ) : (
                   <div className="max-h-60 space-y-1 overflow-y-auto rounded-lg border border-border/70 p-2">
-                    {allPermissions.map((perm) => {
-                      const checked = selectedIds.includes(perm.id);
+                    {allPermissions.map((permission) => {
+                      const checked = selectedIds.includes(permission.id);
+
                       return (
                         <label
-                          key={perm.id}
+                          key={permission.id}
                           className="flex cursor-pointer items-start gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/50"
                         >
                           <input
                             type="checkbox"
                             className="mt-0.5 size-4 shrink-0 accent-primary"
                             checked={checked}
-                            onChange={() => togglePermission(perm.id)}
+                            onChange={() => togglePermission(permission.id)}
                           />
                           <div className="min-w-0">
-                            <p className="truncate text-xs font-mono font-medium">
-                              {perm.code}
+                            <p className="truncate font-mono text-xs font-medium">
+                              {permission.code}
                             </p>
-                            {perm.description && (
+                            {permission.description && (
                               <p className="mt-0.5 text-xs text-muted-foreground">
-                                {perm.description}
+                                {permission.description}
                               </p>
                             )}
                           </div>
@@ -174,12 +191,21 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
                     })}
                   </div>
                 )}
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Đã chọn:{" "}
-                  <span className="font-medium">{selectedIds.length}</span> /{" "}
-                  {allPermissions.length} quyền
+                <p className="text-xs text-muted-foreground">
+                  Selected {selectedIds.length} / {allPermissions.length}
                 </p>
               </div>
+
+              <StorageScopeEditor
+                value={storageScopes}
+                onChange={(nextScopes) =>
+                  form.setValue("storageScopes", nextScopes, {
+                    shouldDirty: true,
+                  })
+                }
+                disabled={isPending}
+                enabled={open}
+              />
             </div>
 
             <SheetFooter>
@@ -189,10 +215,10 @@ const AddRoleSheet = memo((_props: AddRoleSheetProps) => {
                 onClick={() => handleOpenChange(false)}
                 disabled={isPending}
               >
-                Hủy bỏ
+                Cancel
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Đang xử lý..." : "Xác nhận"}
+                {isPending ? "Saving..." : "Create role"}
               </Button>
             </SheetFooter>
           </form>

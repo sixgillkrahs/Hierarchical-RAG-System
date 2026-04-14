@@ -4,10 +4,12 @@ import type { DataSourceOptions } from 'typeorm';
 import { Document } from '../documents/entities/document.entity';
 import { Permission } from '../permissions/entities/permission.entity';
 import { Role } from '../roles/entities/role.entity';
+import { RoleStorageScope } from '../roles/entities/role-storage-scope.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateRbacTables1712400000000 } from './migrations/1712400000000-create-rbac-tables';
 import { AddPermissionRoutes1712400000001 } from './migrations/1712400000001-add-permission-routes';
 import { CreateDocumentsTable1712400000002 } from './migrations/1712400000002-create-documents-table';
+import { CreateRoleStorageScopes1712400000003 } from './migrations/1712400000003-create-role-storage-scopes';
 
 type DbEnv = {
   DB_DATABASE?: unknown;
@@ -64,7 +66,7 @@ export function createTypeOrmOptions(env: DbEnv): TypeOrmModuleOptions {
   const dbType = toString(env.DB_TYPE, 'postgres');
   const synchronize = toBoolean(env.DB_SYNCHRONIZE, false);
   const logging = toBoolean(env.DB_LOGGING, false);
-  const entities = [User, Role, Permission, Document];
+  const entities = [User, Role, Permission, Document, RoleStorageScope];
 
   if (dbType === 'sqlite') {
     return {
@@ -91,6 +93,7 @@ export function createTypeOrmOptions(env: DbEnv): TypeOrmModuleOptions {
       CreateRbacTables1712400000000,
       AddPermissionRoutes1712400000001,
       CreateDocumentsTable1712400000002,
+      CreateRoleStorageScopes1712400000003,
     ],
     migrationsRun: toBoolean(env.DB_RUN_MIGRATIONS, true),
     synchronize,

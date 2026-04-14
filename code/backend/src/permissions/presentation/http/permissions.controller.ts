@@ -4,9 +4,11 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Version,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -45,8 +47,11 @@ export class PermissionsController {
   @ApiOkResponse({
     description: 'Permissions available in the RBAC system.',
   })
-  findAll() {
-    return this.queryBus.execute(new GetPermissionsQuery());
+  findAll(
+    @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 10,
+  ) {
+    return this.queryBus.execute(new GetPermissionsQuery(page, limit));
   }
 
   @Get(':id')

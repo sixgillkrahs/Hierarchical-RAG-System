@@ -14,6 +14,7 @@ import {
 } from "../../../ui/table";
 
 type FolderTableProps = {
+  canManagePath: (path: string) => boolean;
   currentPath: string;
   folders: FolderItem[];
   isLoading: boolean;
@@ -23,6 +24,7 @@ type FolderTableProps = {
 };
 
 export const FolderTable = memo(function FolderTable({
+  canManagePath,
   currentPath,
   folders,
   isLoading,
@@ -30,9 +32,18 @@ export const FolderTable = memo(function FolderTable({
   setCurrentPath,
   setSelected,
 }: FolderTableProps) {
-  const allChecked = folders.length > 0 && selected.size === folders.length;
-  const someChecked = selected.size > 0 && selected.size < folders.length;
-  const folderPaths = folders.map((folder) => folder.path);
+  const manageablePaths = folders
+    .filter((folder) => canManagePath(folder.path))
+    .map((folder) => folder.path);
+  const selectedManageableCount = manageablePaths.filter((path) =>
+    selected.has(path),
+  ).length;
+  const allChecked =
+    manageablePaths.length > 0 &&
+    selectedManageableCount === manageablePaths.length;
+  const someChecked =
+    selectedManageableCount > 0 &&
+    selectedManageableCount < manageablePaths.length;
 
   return (
     <Table className="min-w-[420px]">
@@ -47,13 +58,14 @@ export const FolderTable = memo(function FolderTable({
                   element.indeterminate = someChecked;
                 }
               }}
-              onChange={() => toggleAllFolders(folderPaths, setSelected)}
+              onChange={() => toggleAllFolders(manageablePaths, setSelected)}
               className="size-4 cursor-pointer accent-primary"
-              aria-label="Chọn tất cả"
+              aria-label="Select manageable folders"
+              disabled={manageablePaths.length === 0}
             />
           </TableHead>
-          <TableHead>Tên thư mục</TableHead>
-          <TableHead className="text-right">Thao tác</TableHead>
+          <TableHead>Folder name</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -81,8 +93,8 @@ export const FolderTable = memo(function FolderTable({
               className="h-24 text-center text-muted-foreground"
             >
               {currentPath
-                ? "Thư mục này chưa có thư mục con nào."
-                : "Chưa có thư mục nào. Hãy tạo thư mục đầu tiên!"}
+                ? "This folder does not have any visible child folders yet."
+                : "No folders yet. Create the first one to get started."}
             </TableCell>
           </TableRow>
         ) : (
@@ -93,6 +105,7 @@ export const FolderTable = memo(function FolderTable({
               checked={selected.has(folder.path)}
               setCurrentPath={setCurrentPath}
               setSelected={setSelected}
+              canManage={canManagePath(folder.path)}
             />
           ))
         )}

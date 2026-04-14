@@ -1,3 +1,5 @@
+import type { GetPaginatedParams } from "@/shared/types";
+
 export type PermissionEntity = {
   id: string; // The UUID from the backend
   code: string;
@@ -6,6 +8,16 @@ export type PermissionEntity = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+export type PaginatedPermissions = {
+  data: PermissionEntity[];
+  limit: number;
+  page: number;
+  total: number;
+  totalPages: number;
+};
+
+export type GetPermissionsParams = GetPaginatedParams;
 
 export type CreatePermissionPayload = {
   code: string;
@@ -26,6 +38,11 @@ export type UpdatePermissionPayload = {
 };
 
 export type UpdatePermissionResponse = {
+  message: string;
+  permission: PermissionEntity;
+};
+
+export type DeletePermissionResponse = {
   message: string;
   permission: PermissionEntity;
 };

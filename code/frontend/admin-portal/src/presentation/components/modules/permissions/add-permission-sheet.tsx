@@ -2,9 +2,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { memo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { toast } from "sonner";
+import { z } from "zod";
 
+import { useCreatePermission } from "@/presentation/hooks/useCreatePermission";
 import { Button } from "../../ui/button";
 import {
   Form,
@@ -24,33 +25,24 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../ui/sheet";
-import { useCreatePermission } from "@/presentation/hooks/useCreatePermission";
 
-type AddPermissionSheetProps = {
-  onAdd: (permission: {
-    id: string;
-    module: string;
-    description: string;
-    status: string;
-    statusVariant: "outline" | "destructive" | "warning" | "default" | "secondary";
-  }) => void;
-};
+type AddPermissionSheetProps = Record<string, never>;
 
 const formSchema = z.object({
-  id: z.string().min(3, "Mã quyền phải có ít nhất 3 ký tự (VD: users.write)"),
-  module: z.string().min(2, "Module phải có ít nhất 2 ký tự (VD: Users)"),
+  code: z.string().min(3, "Permission code must be at least 3 characters."),
+  route: z.string().min(1, "Route cannot be empty."),
   description: z.string().optional(),
 });
 
-const AddPermissionSheet = memo(({ onAdd }: AddPermissionSheetProps) => {
+const AddPermissionSheet = memo((_props: AddPermissionSheetProps) => {
   const [open, setOpen] = useState(false);
   const { mutateAsync: createPermission, isPending } = useCreatePermission();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: "",
-      module: "",
+      code: "",
+      route: "",
       description: "",
     },
   });
@@ -58,32 +50,25 @@ const AddPermissionSheet = memo(({ onAdd }: AddPermissionSheetProps) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const response = await createPermission({
-        code: values.id,
-        route: values.module,
+        code: values.code,
+        route: values.route,
         description: values.description || "",
       });
 
-      onAdd({
-        id: response.permission?.code || values.id,
-        module: response.permission?.route || values.module,
-        description: response.permission?.description || values.description || "",
-        status: "Khởi tạo",
-        statusVariant: "outline",
-      });
-
-      toast.success(response.message || "Đã thêm quyền thành công");
+      toast.success(response.message || "Permission created successfully.");
       form.reset();
       setOpen(false);
     } catch (error: any) {
-      toast.error("Thêm quyền thất bại", {
-        description: error?.message || "Đã có lỗi xảy ra trên server.",
+      toast.error("Could not create permission", {
+        description: error?.message || "The server returned an unexpected error.",
       });
     }
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    if (!newOpen) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+
+    if (!nextOpen) {
       form.reset();
     }
   };
@@ -93,27 +78,30 @@ const AddPermissionSheet = memo(({ onAdd }: AddPermissionSheetProps) => {
       <SheetTrigger asChild>
         <Button className="sm:self-auto">
           <Plus className="size-4" />
-          Thêm quyền
+          Add permission
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Thêm quyền truy cập</SheetTitle>
+          <SheetTitle>Create permission</SheetTitle>
           <SheetDescription>
-            Tạo mới quyền điều hướng hoặc API cho hệ thống.
+            Add a new RBAC permission code and bind it to a route.
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex h-full flex-col"
+          >
             <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6">
               <FormField
                 control={form.control}
-                name="id"
+                name="code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mã quyền</FormLabel>
+                    <FormLabel>Permission code</FormLabel>
                     <FormControl>
-                      <Input placeholder="VD: users.write" {...field} />
+                      <Input placeholder="users.read" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -121,12 +109,12 @@ const AddPermissionSheet = memo(({ onAdd }: AddPermissionSheetProps) => {
               />
               <FormField
                 control={form.control}
-                name="module"
+                name="route"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Module</FormLabel>
+                    <FormLabel>Route</FormLabel>
                     <FormControl>
-                      <Input placeholder="Tên module (VD: Users)" {...field} />
+                      <Input placeholder="/users" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -137,9 +125,9 @@ const AddPermissionSheet = memo(({ onAdd }: AddPermissionSheetProps) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mô tả</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input placeholder="Chức năng của quyền..." {...field} />
+                      <Input placeholder="Describe what this permission allows." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -147,16 +135,16 @@ const AddPermissionSheet = memo(({ onAdd }: AddPermissionSheetProps) => {
               />
             </div>
             <SheetFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => handleOpenChange(false)}
                 disabled={isPending}
               >
-                Hủy bỏ
+                Cancel
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Đang xử lý..." : "Xác nhận"}
+                {isPending ? "Saving..." : "Create permission"}
               </Button>
             </SheetFooter>
           </form>

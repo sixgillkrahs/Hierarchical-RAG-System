@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayUnique,
@@ -6,7 +7,10 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  ValidateNested,
 } from 'class-validator';
+
+import { StorageScopeDto } from './storage-scope.dto';
 
 export class CreateRoleDto {
   @ApiProperty({
@@ -37,4 +41,14 @@ export class CreateRoleDto {
   @ArrayUnique()
   @IsUUID('4', { each: true })
   permissionIds?: string[];
+
+  @ApiPropertyOptional({
+    type: [StorageScopeDto],
+    description: 'Optional storage subtree scopes assigned to the role.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StorageScopeDto)
+  storageScopes?: StorageScopeDto[];
 }

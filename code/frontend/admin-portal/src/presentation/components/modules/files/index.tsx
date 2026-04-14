@@ -3,6 +3,11 @@ import { RefreshCw } from "lucide-react";
 import { useDocuments } from "@/presentation/hooks/documents/useDocuments";
 import { useFolders } from "@/presentation/hooks/folders/useFolders";
 import { useAuthSession } from "@/shared/auth/auth-session";
+import {
+  canManageStoragePath,
+  canReadStoragePath,
+  canTraverseStoragePath,
+} from "@/shared/auth/storage-scope";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import {
@@ -23,32 +28,51 @@ const Files = () => {
   const [currentPath, setCurrentPath] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const { data: session } = useAuthSession();
-  const canReadDocuments =
+  const storageScopes = session?.storageScopes ?? [];
+  const hasStorageReadPermission =
     session?.permissions?.includes("storage.read") ||
     session?.permissions?.includes("storage.manage") ||
     false;
-  const canManageDocuments =
+  const hasStorageManagePermission =
     session?.permissions?.includes("storage.manage") || false;
+  const hasStorageScopes = storageScopes.length > 0;
+  const canTraverseCurrentPath =
+    hasStorageReadPermission &&
+    hasStorageScopes &&
+    canTraverseStoragePath(currentPath, storageScopes);
+  const canReadCurrentPath =
+    hasStorageReadPermission &&
+    hasStorageScopes &&
+    canReadStoragePath(currentPath, storageScopes);
+  const canManageCurrentPath =
+    hasStorageManagePermission &&
+    hasStorageScopes &&
+    canManageStoragePath(currentPath, storageScopes);
   const {
     data,
     isLoading: isFoldersLoading,
     isError: isFoldersError,
     refetch: refetchFolders,
     isFetching: isFoldersFetching,
-  } = useFolders(currentPath);
+  } = useFolders(currentPath, canTraverseCurrentPath);
   const {
     data: documents,
     isLoading: isDocumentsLoading,
     isError: isDocumentsError,
     refetch: refetchDocuments,
     isFetching: isDocumentsFetching,
-  } = useDocuments(currentPath, canReadDocuments);
+  } = useDocuments(currentPath, canReadCurrentPath);
 
   const folders = data?.folders ?? [];
   const bucket = data?.bucket ?? "";
-  const selectedFolders = folders.filter((folder) => selected.has(folder.path));
+  const canManagePath = (path: string) =>
+    hasStorageManagePermission && canManageStoragePath(path, storageScopes);
+  const selectedFolders = folders.filter(
+    (folder) => selected.has(folder.path) && canManagePath(folder.path),
+  );
   const documentItems = documents ?? [];
   const isRefreshing = isFoldersFetching || isDocumentsFetching;
+  const showNoScopeState = hasStorageReadPermission && !hasStorageScopes;
 
   return (
     <section className="space-y-6">
@@ -76,11 +100,11 @@ const Files = () => {
               size="sm"
               onClick={() => {
                 void Promise.all([
-                  refetchFolders(),
-                  canReadDocuments ? refetchDocuments() : Promise.resolve(),
+                  canTraverseCurrentPath ? refetchFolders() : Promise.resolve(),
+                  canReadCurrentPath ? refetchDocuments() : Promise.resolve(),
                 ]);
               }}
-              disabled={isRefreshing}
+              disabled={isRefreshing || (!canTraverseCurrentPath && !canReadCurrentPath)}
             >
               <RefreshCw
                 className={`mr-2 size-4 ${isRefreshing ? "animate-spin" : ""}`}
@@ -110,7 +134,17 @@ const Files = () => {
                 </p>
               </div>
 
-              <CreateFolderSheet currentPath={currentPath} />
+              <div className="flex flex-col items-start gap-2 sm:items-end">
+                <CreateFolderSheet
+                  currentPath={currentPath}
+                  disabled={!canManageCurrentPath}
+                />
+                {!showNoScopeState && !canManageCurrentPath && canTraverseCurrentPath && (
+                  <p className="text-xs text-muted-foreground">
+                    This folder is visible, but not writable for your role.
+                  </p>
+                )}
+              </div>
             </div>
 
             {selectedFolders.length > 0 && (
@@ -120,7 +154,15 @@ const Files = () => {
               />
             )}
 
-            {isFoldersError ? (
+            {showNoScopeState ? (
+              <p className="rounded-lg border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
+                Your account has storage permissions but no storage subtree scope yet.
+              </p>
+            ) : !canTraverseCurrentPath ? (
+              <p className="rounded-lg border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
+                You cannot browse this folder path with the current storage scopes.
+              </p>
+            ) : isFoldersError ? (
               <p className="py-8 text-center text-sm text-destructive">
                 Could not load folders. Try again.
               </p>
@@ -132,6 +174,7 @@ const Files = () => {
                 selected={selected}
                 setCurrentPath={setCurrentPath}
                 setSelected={setSelected}
+                canManagePath={canManagePath}
               />
             )}
           </div>
@@ -151,19 +194,30 @@ const Files = () => {
               <div className="flex flex-col items-start gap-2 sm:items-end">
                 <UploadDocumentSheet
                   currentPath={currentPath}
-                  disabled={!canManageDocuments}
+                  disabled={!canManageCurrentPath}
                 />
-                {!canManageDocuments && (
+                {!showNoScopeState && !canManageCurrentPath && canReadCurrentPath && (
                   <p className="text-xs text-muted-foreground">
-                    You need `storage.manage` to upload documents.
+                    You can view this folder, but uploads require a matching
+                    manage scope.
                   </p>
                 )}
               </div>
             </div>
 
-            {!canReadDocuments ? (
+            {!hasStorageReadPermission ? (
               <p className="rounded-lg border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
                 You do not have permission to view document metadata.
+              </p>
+            ) : showNoScopeState ? (
+              <p className="rounded-lg border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
+                No document subtree is assigned to your current role set.
+              </p>
+            ) : !canReadCurrentPath ? (
+              <p className="rounded-lg border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
+                This folder is only part of your navigation path. Document
+                metadata becomes visible once you enter a folder covered by a
+                read or manage scope.
               </p>
             ) : isDocumentsError ? (
               <p className="py-8 text-center text-sm text-destructive">

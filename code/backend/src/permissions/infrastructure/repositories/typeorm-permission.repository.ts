@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import type { PermissionRepository } from '../../domain/permission.repository';
+import type {
+  PaginatedResult,
+  PermissionRepository,
+} from '../../domain/permission.repository';
 import type { PermissionSummary } from '../../domain/permission-summary';
 import { Permission } from '../../entities/permission.entity';
 
@@ -54,6 +57,27 @@ export class TypeOrmPermissionRepository implements PermissionRepository {
     });
 
     return permissions.map((permission) => this.toSummary(permission));
+  }
+
+  async findPaginated(
+    page: number,
+    limit: number,
+  ): Promise<PaginatedResult<PermissionSummary>> {
+    const [permissions, total] = await this.permissionRepository.findAndCount({
+      order: {
+        code: 'ASC',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: permissions.map((permission) => this.toSummary(permission)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async update(

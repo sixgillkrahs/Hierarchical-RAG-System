@@ -18,7 +18,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { CurrentUser } from '../common/auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../common/auth/decorators/require-permissions.decorator';
+import type { AuthenticatedUser } from '../common/auth/interfaces/authenticated-user.interface';
 import { CreateFolderDto } from './dto/create-folder.dto';
 import { DeleteFolderDto } from './dto/delete-folder.dto';
 import { DeleteFoldersDto } from './dto/delete-folders.dto';
@@ -54,8 +56,9 @@ export class FoldersController {
   })
   findAll(
     @Query('current_path') currentPath?: string,
+    @CurrentUser() user?: AuthenticatedUser,
   ): Promise<FolderListResponseDto> {
-    return this.foldersService.listFolders(currentPath ?? '');
+    return this.foldersService.listFolders(currentPath ?? '', user);
   }
 
   @Post()
@@ -69,8 +72,9 @@ export class FoldersController {
   })
   create(
     @Body() payload: CreateFolderDto,
+    @CurrentUser() user?: AuthenticatedUser,
   ): Promise<FolderCreateResponseDto> {
-    return this.foldersService.createFolder(payload);
+    return this.foldersService.createFolder(payload, user);
   }
 
   @Post('bulk-delete')
@@ -84,8 +88,9 @@ export class FoldersController {
   })
   bulkDelete(
     @Body() payload: DeleteFoldersDto,
+    @CurrentUser() user?: AuthenticatedUser,
   ): Promise<FolderBulkDeleteResponseDto> {
-    return this.foldersService.deleteFolders(payload);
+    return this.foldersService.deleteFolders(payload, user);
   }
 
   @Delete()
@@ -99,8 +104,9 @@ export class FoldersController {
   })
   remove(
     @Body() payload: DeleteFolderDto,
+    @CurrentUser() user?: AuthenticatedUser,
   ): Promise<FolderDeleteResponseDto> {
-    return this.foldersService.deleteFolder(payload);
+    return this.foldersService.deleteFolder(payload, user);
   }
 
   @Patch()
@@ -114,7 +120,8 @@ export class FoldersController {
   })
   rename(
     @Body() payload: RenameFolderDto,
+    @CurrentUser() user?: AuthenticatedUser,
   ): Promise<FolderRenameResponseDto> {
-    return this.foldersService.renameFolder(payload);
+    return this.foldersService.renameFolder(payload, user);
   }
 }

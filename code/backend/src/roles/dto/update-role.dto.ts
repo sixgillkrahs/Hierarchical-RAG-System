@@ -5,8 +5,12 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
   IsUUID,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+import { StorageScopeDto } from './storage-scope.dto';
 
 export class UpdateRoleDto {
   @ApiPropertyOptional({
@@ -40,4 +44,15 @@ export class UpdateRoleDto {
   @ArrayUnique()
   @IsUUID('4', { each: true })
   permissionIds?: string[];
+
+  @ApiPropertyOptional({
+    type: [StorageScopeDto],
+    description:
+      'Replacement storage subtree scopes. Send an empty array to clear all role storage scopes.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StorageScopeDto)
+  storageScopes?: StorageScopeDto[];
 }

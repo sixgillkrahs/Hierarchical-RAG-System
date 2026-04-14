@@ -38,7 +38,10 @@ export const toggleAllFolders = (
   setSelected: SelectionSetter,
 ) => {
   setSelected((prev) => {
-    if (prev.size === folderPaths.length) {
+    const allSelected =
+      folderPaths.length > 0 && folderPaths.every((path) => prev.has(path));
+
+    if (allSelected) {
       return new Set();
     }
 

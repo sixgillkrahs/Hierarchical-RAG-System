@@ -2,9 +2,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { toast } from "sonner";
+import { z } from "zod";
 
+import type { PermissionEntity } from "@/domain/entities/permission.entity";
+import { useUpdatePermission } from "@/presentation/hooks/useUpdatePermission";
 import { Button } from "../../ui/button";
 import {
   Form,
@@ -24,157 +26,139 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../ui/sheet";
-import { useUpdatePermission } from "@/presentation/hooks/useUpdatePermission";
-
-type PermissionRow = {
-  id: string;      // permission UUID
-  code: string;    // displayed "Mã quyền"
-  route: string;   // displayed "Module/Route"
-  description: string;
-};
 
 type EditPermissionSheetProps = {
-  permission: PermissionRow;
-  onUpdated: (updated: PermissionRow) => void;
+  permission: PermissionEntity;
 };
 
 const formSchema = z.object({
-  code: z.string().min(3, "Mã quyền phải có ít nhất 3 ký tự"),
-  route: z.string().min(1, "Route không được để trống"),
+  code: z.string().min(3, "Permission code must be at least 3 characters."),
+  route: z.string().min(1, "Route cannot be empty."),
   description: z.string().optional(),
 });
 
-const EditPermissionSheet = memo(
-  ({ permission, onUpdated }: EditPermissionSheetProps) => {
-    const [open, setOpen] = useState(false);
-    const { mutateAsync: updatePermission, isPending } = useUpdatePermission();
+const EditPermissionSheet = memo(({ permission }: EditPermissionSheetProps) => {
+  const [open, setOpen] = useState(false);
+  const { mutateAsync: updatePermission, isPending } = useUpdatePermission();
 
-    const form = useForm<z.infer<typeof formSchema>>({
-      resolver: zodResolver(formSchema),
-      defaultValues: {
-        code: permission.code,
-        route: permission.route,
-        description: permission.description,
-      },
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      code: permission.code,
+      route: permission.route,
+      description: permission.description,
+    },
+  });
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    form.reset({
+      code: permission.code,
+      route: permission.route,
+      description: permission.description,
     });
+  }, [form, open, permission]);
 
-    // Sync form values when permission prop changes (e.g. after add)
-    useEffect(() => {
-      if (open) {
-        form.reset({
-          code: permission.code,
-          route: permission.route,
-          description: permission.description,
-        });
-      }
-    }, [open, permission, form]);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      const response = await updatePermission({
+        id: permission.id,
+        code: values.code,
+        route: values.route,
+        description: values.description || "",
+      });
 
-    const onSubmit = async (values: z.infer<typeof formSchema>) => {
-      try {
-        const response = await updatePermission({
-          id: permission.id,
-          code: values.code,
-          route: values.route,
-          description: values.description || "",
-        });
+      toast.success(response.message || "Permission updated successfully.");
+      setOpen(false);
+    } catch (error: any) {
+      toast.error("Could not update permission", {
+        description: error?.message || "The server returned an unexpected error.",
+      });
+    }
+  };
 
-        onUpdated({
-          id: permission.id,
-          code: response.permission?.code || values.code,
-          route: response.permission?.route || values.route,
-          description: response.permission?.description || values.description || "",
-        });
-
-        toast.success(response.message || "Cập nhật quyền thành công");
-        setOpen(false);
-      } catch (error: any) {
-        toast.error("Cập nhật quyền thất bại", {
-          description: error?.message || "Đã có lỗi xảy ra trên server.",
-        });
-      }
-    };
-
-    const handleOpenChange = (newOpen: boolean) => {
-      setOpen(newOpen);
-    };
-
-    return (
-      <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetTrigger asChild>
-          <Button size="icon-sm" variant="ghost" className="text-muted-foreground">
-            <Pencil className="size-4" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent className="sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>Chỉnh sửa quyền</SheetTitle>
-            <SheetDescription>
-              Cập nhật thông tin quyền truy cập trong hệ thống.
-            </SheetDescription>
-          </SheetHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col">
-              <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6">
-                <FormField
-                  control={form.control}
-                  name="code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mã quyền</FormLabel>
-                      <FormControl>
-                        <Input placeholder="VD: users.write" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="route"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Route</FormLabel>
-                      <FormControl>
-                        <Input placeholder="VD: /users" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mô tả</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Chức năng của quyền..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <SheetFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleOpenChange(false)}
-                  disabled={isPending}
-                >
-                  Hủy bỏ
-                </Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Đang lưu..." : "Lưu thay đổi"}
-                </Button>
-              </SheetFooter>
-            </form>
-          </Form>
-        </SheetContent>
-      </Sheet>
-    );
-  },
-);
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button size="icon-sm" variant="ghost" className="text-muted-foreground">
+          <Pencil className="size-4" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Edit permission</SheetTitle>
+          <SheetDescription>
+            Update the permission code, route, or description.
+          </SheetDescription>
+        </SheetHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex h-full flex-col"
+          >
+            <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6">
+              <FormField
+                control={form.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Permission code</FormLabel>
+                    <FormControl>
+                      <Input placeholder="users.read" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="route"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Route</FormLabel>
+                    <FormControl>
+                      <Input placeholder="/users" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Describe what this permission allows." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <SheetFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Saving..." : "Save changes"}
+              </Button>
+            </SheetFooter>
+          </form>
+        </Form>
+      </SheetContent>
+    </Sheet>
+  );
+});
 
 EditPermissionSheet.displayName = "EditPermissionSheet";
 

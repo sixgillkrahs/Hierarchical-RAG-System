@@ -6,10 +6,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { StorageScopeService } from '../common/auth/storage-scope.service';
 import { JwtAuthGuard } from '../common/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/auth/guards/permissions.guard';
 import { Permission } from '../permissions/entities/permission.entity';
 import { Role } from '../roles/entities/role.entity';
+import { RoleStorageScope } from '../roles/entities/role-storage-scope.entity';
 import { User } from '../users/entities/user.entity';
 import { AuthTokenService } from './auth-token.service';
 import { GetCurrentUserHandler } from './application/handlers/get-current-user.handler';
@@ -37,13 +39,14 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         },
       }),
     }),
-    TypeOrmModule.forFeature([User, Role, Permission]),
+    TypeOrmModule.forFeature([User, Role, Permission, RoleStorageScope]),
   ],
   controllers: [AuthController],
   providers: [
     LoginHandler,
     GetCurrentUserHandler,
     AuthTokenService,
+    StorageScopeService,
     JwtStrategy,
     RbacSeedService,
     TypeOrmAuthUserRepository,

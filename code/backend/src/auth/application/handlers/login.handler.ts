@@ -50,6 +50,13 @@ export class LoginHandler implements ICommandHandler<LoginCommand, LoginResult> 
       roles: [...user.roles].sort(),
       permissions: [...user.permissions].sort(),
       routes: [...user.routes].sort(),
+      storageScopes: [...user.storageScopes].sort((left, right) => {
+        if (left.pathPrefix === right.pathPrefix) {
+          return left.capability.localeCompare(right.capability);
+        }
+
+        return left.pathPrefix.localeCompare(right.pathPrefix);
+      }),
     };
 
     const tokens = await this.authTokenService.createTokenPair(profile);

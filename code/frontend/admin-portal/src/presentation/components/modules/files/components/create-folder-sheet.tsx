@@ -16,10 +16,12 @@ import {
 
 type CreateFolderSheetProps = {
   currentPath: string;
+  disabled?: boolean;
 };
 
 export function CreateFolderSheet({
   currentPath,
+  disabled = false,
 }: CreateFolderSheetProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -30,7 +32,7 @@ export function CreateFolderSheet({
       ? `${currentPath}/${name.trim()}`
       : name.trim();
 
-    if (!folderPath) {
+    if (!folderPath || disabled) {
       return;
     }
 
@@ -43,19 +45,31 @@ export function CreateFolderSheet({
     }
   };
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (disabled && nextOpen) {
+      return;
+    }
+
+    setOpen(nextOpen);
+
+    if (!nextOpen) {
+      setName("");
+    }
+  };
+
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" disabled={disabled}>
           <FolderPlus className="mr-2 size-4" />
-          Tạo thư mục
+          Create folder
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-sm">
         <SheetHeader>
-          <SheetTitle>Tạo thư mục mới</SheetTitle>
+          <SheetTitle>Create folder</SheetTitle>
           <SheetDescription>
-            Tạo trong{" "}
+            Create a new prefix inside{" "}
             <code className="rounded bg-muted px-1 text-xs">
               {currentPath || "root"}
             </code>
@@ -63,9 +77,9 @@ export function CreateFolderSheet({
         </SheetHeader>
         <div className="flex flex-col gap-4 px-4 py-6">
           <div className="space-y-2">
-            <Label>Tên thư mục</Label>
+            <Label>Folder name</Label>
             <Input
-              placeholder="VD: contracts, 2026, reports..."
+              placeholder="contracts, 2026, reports"
               value={name}
               onChange={(event) => setName(event.target.value)}
               onKeyDown={(event) => {
@@ -73,10 +87,11 @@ export function CreateFolderSheet({
                   void handleSubmit();
                 }
               }}
+              disabled={disabled || isPending}
             />
             {currentPath && name && (
               <p className="text-xs text-muted-foreground">
-                Đường dẫn đầy đủ:{" "}
+                Full path:{" "}
                 <code className="rounded bg-muted px-1">
                   {currentPath}/{name}
                 </code>
@@ -90,14 +105,14 @@ export function CreateFolderSheet({
             onClick={() => setOpen(false)}
             disabled={isPending}
           >
-            Hủy
+            Cancel
           </Button>
           <Button
             onClick={() => void handleSubmit()}
-            disabled={isPending || !name.trim()}
+            disabled={disabled || isPending || !name.trim()}
           >
             {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-            Tạo thư mục
+            Create folder
           </Button>
         </SheetFooter>
       </SheetContent>

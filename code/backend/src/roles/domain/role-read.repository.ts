@@ -1,3 +1,4 @@
+import type { StorageScopeSummary } from '../../common/auth/storage-scope.types';
 import type { RoleSummary } from './role-summary';
 
 export const ROLE_REPOSITORY = Symbol('ROLE_REPOSITORY');
@@ -15,6 +16,7 @@ export interface RoleRepository {
     description: string;
     name: string;
     permissionIds: string[];
+    storageScopes: StorageScopeSummary[];
   }): Promise<RoleSummary>;
   findById(id: string): Promise<RoleSummary | null>;
   findAll(): Promise<RoleSummary[]>;
@@ -25,6 +27,7 @@ export interface RoleRepository {
       description?: string;
       name?: string;
       permissionIds?: string[];
+      storageScopes?: StorageScopeSummary[];
     },
   ): Promise<RoleSummary | null>;
   delete(id: string): Promise<RoleSummary | null>;

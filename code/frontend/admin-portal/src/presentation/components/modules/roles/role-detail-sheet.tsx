@@ -1,6 +1,6 @@
-import { memo } from "react";
 import { Eye } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
+import type { RoleEntity } from "@/domain/entities/role.entity";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import {
@@ -11,22 +11,19 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../ui/sheet";
-
-type RoleRow = {
-  id: string;
-  name: string;
-  description: string;
-  permissions?: string[];
-  permissionIds?: string[];
-};
+import {
+  buildStorageScopePreview,
+  formatStorageScopePath,
+  STORAGE_SCOPE_CAPABILITY_COPY,
+  STORAGE_SCOPE_INHERITANCE_COPY,
+} from "./storage-scope-copy";
 
 type RoleDetailSheetProps = {
-  role: RoleRow;
+  role: RoleEntity;
 };
 
 const RoleDetailSheet = memo(({ role }: RoleDetailSheetProps) => {
   const [open, setOpen] = useState(false);
-  const permissions = role.permissions ?? [];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -35,48 +32,90 @@ const RoleDetailSheet = memo(({ role }: RoleDetailSheetProps) => {
           <Eye className="size-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-xl">
         <SheetHeader>
           <SheetTitle>{role.name}</SheetTitle>
           <SheetDescription>{role.description}</SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6 px-4">
-          {/* Stats */}
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-border/70 bg-muted/30 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Tổng quyền
+                Permissions
               </p>
               <p className="mt-1 text-3xl font-bold text-foreground">
-                {permissions.length}
+                {role.permissions.length}
               </p>
             </div>
             <div className="rounded-xl border border-border/70 bg-muted/30 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                UUID
+                Storage scopes
               </p>
-              <p className="mt-1 break-all text-[11px] font-mono text-muted-foreground">
-                {role.id}
+              <p className="mt-1 text-3xl font-bold text-foreground">
+                {role.storageScopes.length}
               </p>
             </div>
           </div>
 
-          {/* Permissions list */}
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Danh sách quyền
+              Permission list
             </p>
-            {permissions.length === 0 ? (
+            {role.permissions.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Chưa có quyền nào được gán vào vai trò này.
+                No permissions assigned to this role.
               </p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {permissions.map((perm) => (
-                  <Badge key={perm} variant="outline" className="font-mono text-xs">
-                    {perm}
+                {role.permissions.map((permission) => (
+                  <Badge
+                    key={permission}
+                    variant="outline"
+                    className="font-mono text-xs"
+                  >
+                    {permission}
                   </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Storage subtree access
+            </p>
+            {role.storageScopes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No storage scopes assigned to this role.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {role.storageScopes.map((scope, index) => (
+                  <div
+                    key={scope.id ?? `${scope.pathPrefix}-${scope.capability}-${index}`}
+                    className="rounded-xl border border-border/70 bg-muted/20 p-4"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" className="font-mono text-xs">
+                        {formatStorageScopePath(scope.pathPrefix)}
+                      </Badge>
+                      <Badge
+                        variant={STORAGE_SCOPE_CAPABILITY_COPY[scope.capability].badgeVariant}
+                        className="text-xs"
+                      >
+                        {STORAGE_SCOPE_CAPABILITY_COPY[scope.capability].label}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {scope.inheritChildren
+                          ? STORAGE_SCOPE_INHERITANCE_COPY.children.label
+                          : STORAGE_SCOPE_INHERITANCE_COPY.exact.label}
+                      </Badge>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {buildStorageScopePreview(scope)}
+                    </p>
+                  </div>
                 ))}
               </div>
             )}
